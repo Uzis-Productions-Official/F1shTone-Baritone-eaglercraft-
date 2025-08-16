@@ -10,9 +10,10 @@
       padding: 0;
       height: 100%;
       overflow: hidden;
+      font-family: Arial, sans-serif;
     }
 
-    /* Eaglercraft iframe */
+    /* Eaglercraft game iframe */
     #gameFrame {
       width: 100%;
       height: 100%;
@@ -26,15 +27,15 @@
     /* Bot menu overlay */
     #menu {
       position: absolute;
-      top: 50px;
+      top: 60px;
       right: 50px;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.9);
       color: #fff;
       padding: 20px;
-      border-radius: 10px;
+      border-radius: 12px;
       display: none;
       z-index: 9999;
-      width: 300px;
+      width: 320px;
     }
 
     #menu h1 {
@@ -50,11 +51,45 @@
       border-radius: 6px;
       border: none;
       cursor: pointer;
+      font-size: 14px;
     }
 
     #menu input {
       background: #222;
       color: white;
+    }
+
+    /* Persistent button bottom-left */
+    #openClientBtn {
+      position: absolute;
+      bottom: 15px;
+      left: 15px;
+      z-index: 10000;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.75);
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Suggestions list */
+    #suggestions {
+      background: #111;
+      color: #0f0;
+      max-height: 120px;
+      overflow-y: auto;
+      margin-top: 5px;
+      padding: 5px;
+      display: none;
+    }
+    #suggestions div {
+      padding: 4px;
+      cursor: pointer;
+    }
+    #suggestions div:hover {
+      background: #333;
     }
   </style>
 </head>
@@ -62,27 +97,109 @@
   <!-- Eaglercraft game -->
   <iframe id="gameFrame" src="Release 1.8.8.html"></iframe>
 
+  <!-- Persistent open button -->
+  <button id="openClientBtn">🐟 Open F1shPr0</button>
+
   <!-- Bot Client Menu -->
   <div id="menu">
     <h1>🐟 F1shPr0 Bot Menu</h1>
+
     <button id="getBtn">Get Item</button>
+    <input id="getInput" type="text" placeholder="Type item..." style="display:none;">
+    <div id="suggestions"></div>
+
     <button id="gotoBtn">Goto Coords</button>
+    <input id="gotoInput" type="text" placeholder="x y z" style="display:none;">
+
     <button id="trackBtn">Track Player</button>
+    <input id="trackInput" type="text" placeholder="Player name" style="display:none;">
+
     <button id="buildBtn">Build Structure</button>
+
     <button onclick="document.getElementById('menu').style.display='none'">Close Menu</button>
   </div>
 
   <!-- Bot logic -->
   <script src="f1shpr0.js"></script>
   <script>
-    // Hotkeys for opening/closing menu
+    const menu = document.getElementById("menu");
+    const openBtn = document.getElementById("openClientBtn");
+
+    // Toggle with hotkeys
     document.addEventListener("keydown", (e) => {
-      if (e.code === "ShiftRight") {
-        document.getElementById("menu").style.display = "block";
+      if (e.code === "ShiftRight") menu.style.display = "block";
+      if (e.code === "ControlRight") menu.style.display = "none";
+    });
+
+    // Toggle with bottom-left button
+    openBtn.addEventListener("click", () => {
+      menu.style.display = (menu.style.display === "block") ? "none" : "block";
+    });
+
+    // GET ITEM system
+    const getBtn = document.getElementById("getBtn");
+    const getInput = document.getElementById("getInput");
+    const suggestionsBox = document.getElementById("suggestions");
+
+    let items = [];
+    fetch("items.json")
+      .then(res => res.json())
+      .then(data => { items = data; });
+
+    getBtn.addEventListener("click", () => {
+      getInput.style.display = "block";
+      getInput.focus();
+    });
+
+    getInput.addEventListener("input", () => {
+      const val = getInput.value.toLowerCase();
+      suggestionsBox.innerHTML = "";
+      if (!val) {
+        suggestionsBox.style.display = "none";
+        return;
       }
-      if (e.code === "ControlRight") {
-        document.getElementById("menu").style.display = "none";
+      const filtered = items.filter(it => it.name.includes(val)).slice(0, 8);
+      filtered.forEach(it => {
+        const div = document.createElement("div");
+        div.textContent = it.name;
+        div.onclick = () => {
+          getInput.value = it.name;
+          suggestionsBox.style.display = "none";
+          startGetProcess(it);
+        };
+        suggestionsBox.appendChild(div);
+      });
+      suggestionsBox.style.display = filtered.length ? "block" : "none";
+    });
+
+    function startGetProcess(item) {
+      alert("Bot will try to obtain: " + item.name);
+      // TODO: f1shpr0.js will handle the actual AI pathfinding, crafting, mining
+    }
+
+    // GOTO system
+    document.getElementById("gotoBtn").addEventListener("click", () => {
+      document.getElementById("gotoInput").style.display = "block";
+    });
+    document.getElementById("gotoInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        alert("Bot will go to coords: " + e.target.value);
       }
+    });
+
+    // TRACK system
+    document.getElementById("trackBtn").addEventListener("click", () => {
+      document.getElementById("trackInput").style.display = "block";
+    });
+    document.getElementById("trackInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        alert("Bot will track player: " + e.target.value);
+      }
+    });
+
+    // BUILD system
+    document.getElementById("buildBtn").addEventListener("click", () => {
+      window.open("build.html", "_blank"); // new page for pixel-art
     });
   </script>
 </body>
