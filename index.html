@@ -1,92 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>F1shPr0 Bot Client</title>
   <style>
-    :root { --bg:#0b0f12; --fg:#c7ffd8; --accent:#00ff99; }
-    body { margin:0; font-family: ui-monospace,Menlo,Consolas,monospace; }
-    #f1shpr0Menu {
-      display:none; position:fixed; top:48px; left:48px; width:460px; max-height:80vh;
-      overflow:auto; background:rgba(11,15,18,0.92); color:var(--fg);
-      border:1px solid rgba(0,255,153,0.3); border-radius:14px; box-shadow:0 10px 30px #0008;
-      padding:16px; z-index:999999;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: white;
     }
-    h2 { margin:4px 0 10px; color:var(--accent); font-weight:700; font-size:18px; }
-    .row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+    #menu {
+      position: fixed;
+      top: 50px;
+      left: 50px;
+      width: 300px;
+      padding: 15px;
+      background: rgba(30,30,30,0.95);
+      border: 2px solid #555;
+      border-radius: 8px;
+      display: none;
+      z-index: 9999;
+    }
+    #menu h2 {
+      margin-top: 0;
+    }
     button {
-      padding:7px 10px; background:#0f151a; color:var(--fg); border:1px solid #223; border-radius:8px; cursor:pointer;
+      width: 100%;
+      margin: 4px 0;
+      padding: 8px;
+      background: #2e8b57;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
     }
-    button.primary { border-color:var(--accent); }
-    input,select,textarea {
-      background:#06090c; color:var(--fg); border:1px solid #233; border-radius:8px; padding:8px; outline:none;
+    button:hover {
+      background: #3cb371;
     }
-    input::placeholder { color:#789; }
-    .k { color:#7fffd4; }
-    .log { background:#060a0d; border:1px solid #123; padding:8px; border-radius:10px; max-height:160px; overflow:auto; font-size:12px; }
-    .pill { padding:2px 6px; border:1px solid #2a4; border-radius:999px; color:#bff; }
-    .tabbar { display:flex; gap:6px; margin-bottom:8px; }
-    .tabbar button { background:#0a0f12; }
-    .tabbar button.active { background:#0f151a; border-color:var(--accent); }
-    .hint { color:#8ac; font-size:12px; }
+    input, select {
+      width: 100%;
+      margin: 4px 0;
+      padding: 6px;
+      border-radius: 5px;
+      border: 1px solid #555;
+    }
   </style>
 </head>
 <body>
-  <div id="f1shpr0Menu">
-    <div class="tabbar">
-      <button id="tabHome" class="active" onclick="F1shPr0.ui.tab('home')">Home</button>
-      <button onclick="F1shPr0.ui.tab('tasks')">Tasks</button>
-      <button onclick="F1shPr0.ui.tab('build')">Build</button>
-      <button onclick="F1shPr0.ui.tab('settings')">Settings</button>
-    </div>
+  <h1 style="text-align:center; margin-top:20px;">F1shPr0 Bot Client</h1>
 
-    <div id="viewHome">
-      <h2>F1shPr0 Client <span class="pill" id="modePill">detecting…</span></h2>
-      <div class="row">
-        <button class="primary" onclick="F1shPr0.ui.get()">Get Item</button>
-        <button onclick="F1shPr0.ui.goto()">Goto</button>
-        <button onclick="F1shPr0.ui.track()">Track Player</button>
-        <button onclick="F1shPr0.ui.quickWood()">Starter Tools</button>
-      </div>
-      <div id="panelHome"></div>
-      <div class="log" id="botLog"></div>
-      <div class="hint">Open: Right Shift • Close: Right Ctrl</div>
-    </div>
-
-    <div id="viewTasks" style="display:none">
-      <h2>Tasks</h2>
-      <div id="tasksList"></div>
-    </div>
-
-    <div id="viewBuild" style="display:none">
-      <h2>Build</h2>
-      <div class="row">
-        <label>Pixel size</label>
-        <select id="pxSize">
-          <option value="1">1 (1 block)</option>
-          <option value="2">2 (2x2 blocks)</option>
-          <option value="3">3 (3x3 blocks)</option>
-          <option value="4">4 (4x4 blocks)</option>
-        </select>
-        <button onclick="F1shPr0.build.newCanvas()">New Canvas</button>
-        <button onclick="F1shPr0.build.run()">Build Here</button>
-      </div>
-      <canvas id="buildCanvas" width="256" height="256" style="background:#000;border:1px solid #234;border-radius:8px;"></canvas>
-      <div id="palette" class="row" style="margin-top:8px;"></div>
-    </div>
-
-    <div id="viewSettings" style="display:none">
-      <h2>Settings</h2>
-      <div class="row">
-        <label>Max Path Nodes <input id="optMaxNodes" type="number" value="6000" /></label>
-        <label>Break Timeout ms <input id="optBreakTimeout" type="number" value="6000" /></label>
-        <label>Step Height <input id="optStepHeight" type="number" value="1.0" /></label>
-      </div>
-      <div class="row">
-        <button onclick="F1shPr0.saveSettings()">Save</button>
-        <button onclick="F1shPr0.resetSettings()">Reset</button>
-      </div>
-    </div>
+  <div id="menu">
+    <h2>F1shPr0 Controls</h2>
+    <button onclick="BotUI.promptGet()">Get Item</button>
+    <button onclick="BotUI.promptGoto()">Goto Coords</button>
+    <button onclick="BotUI.promptTrack()">Track Player</button>
+    <button onclick="BotUI.openBuild()">Build</button>
+    <button onclick="BotUI.close()">Close Menu</button>
+    <div id="output" style="margin-top:10px; font-size:13px;"></div>
   </div>
 
   <script src="f1shpr0.js"></script>
