@@ -1,1 +1,1360 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "game": "minecraft-1.8.8",
+    "notes": [
+      "All crafting recipes are 3x3 arrays; use null for empty slots.",
+      "For 2x2 recipes, items are placed in the top-left of the 3x3 grid.",
+      "toolTier: 0 = any tool/hand, 1 = stone-or-better, 2 = iron-or-better, 3 = diamond.",
+      "Blocks listed under `from: mining` may also have special requirements (e.g., shears); see `tool`.",
+      "Counts reflect vanilla outputs for 1.8.8."
+    ]
+  },
 
+  "air": { "craftable": false, "from": "none" },
+
+  /* =========================
+   * WOOD / LOGS / PLANKS / STICKS / BASIC
+   * ========================= */
+  "oak_log":        { "craftable": false, "from": "mining", "block": "oak_log", "tool": "axe", "toolTier": 0 },
+  "spruce_log":     { "craftable": false, "from": "mining", "block": "spruce_log", "tool": "axe", "toolTier": 0 },
+  "birch_log":      { "craftable": false, "from": "mining", "block": "birch_log", "tool": "axe", "toolTier": 0 },
+  "jungle_log":     { "craftable": false, "from": "mining", "block": "jungle_log", "tool": "axe", "toolTier": 0 },
+  "acacia_log":     { "craftable": false, "from": "mining", "block": "acacia_log", "tool": "axe", "toolTier": 0 },
+  "dark_oak_log":   { "craftable": false, "from": "mining", "block": "dark_oak_log", "tool": "axe", "toolTier": 0 },
+
+  "planks": {
+    "aliases": ["oak_planks","spruce_planks","birch_planks","jungle_planks","acacia_planks","dark_oak_planks"],
+    "craftable": true,
+    "count": 4,
+    "recipe": [
+      ["log", null, null],
+      [null,  null, null],
+      [null,  null, null]
+    ],
+    "from": "crafting",
+    "notes": "log may be any of the 6 wood logs above"
+  },
+
+  "stick": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      [null, "planks", null],
+      [null, "planks", null],
+      [null, null, null]
+    ]
+  },
+
+  "crafting_table": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks", "planks", null],
+      ["planks", "planks", null],
+      [null, null, null]
+    ]
+  },
+
+  "chest": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks","planks","planks"],
+      ["planks",   null ,"planks"],
+      ["planks","planks","planks"]
+    ]
+  },
+
+  "ladder": {
+    "craftable": true, "count": 3, "from": "crafting",
+    "recipe": [
+      ["stick", null , "stick"],
+      ["stick","stick","stick"],
+      ["stick", null , "stick"]
+    ]
+  },
+
+  "sign": {
+    "craftable": true, "count": 3, "from": "crafting",
+    "recipe": [
+      ["planks","planks","planks"],
+      ["planks","planks","planks"],
+      [null,"stick",null]
+    ]
+  },
+
+  "bowl": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      ["planks", null , "planks"],
+      [null,   "planks", null],
+      [null, null, null]
+    ]
+  },
+
+  "book": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["paper","paper","paper"],
+      [null,   "leather", null],
+      [null, null, null]
+    ]
+  },
+
+  "bookshelf": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks","planks","planks"],
+      ["book","book","book"],
+      ["planks","planks","planks"]
+    ]
+  },
+
+  "paper": {
+    "craftable": true, "count": 3, "from": "crafting",
+    "recipe": [
+      [null,"sugar_cane",null],
+      [null,"sugar_cane",null],
+      [null,"sugar_cane",null]
+    ]
+  },
+
+  "map_empty": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["paper","paper","paper"],
+      ["paper","compass","paper"],
+      ["paper","paper","paper"]
+    ]
+  },
+
+  "item_frame": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["stick","stick","stick"],
+      ["stick","leather","stick"],
+      ["stick","stick","stick"]
+    ]
+  },
+
+  /* =========================
+   * TOOLS / WEAPONS / ARMOR
+   * ========================= */
+
+  "wooden_pickaxe": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks","planks","planks"],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "wooden_axe": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks","planks",null],
+      ["planks","stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "wooden_shovel": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"planks",null],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "wooden_sword": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"planks",null],
+      [null,"planks",null],
+      [null,"stick",null]
+    ]
+  },
+  "wooden_hoe": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks","planks",null],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+
+  "stone_pickaxe": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["cobblestone","cobblestone","cobblestone"],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "stone_axe": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["cobblestone","cobblestone",null],
+      ["cobblestone","stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "stone_shovel": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"cobblestone",null],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "stone_sword": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"cobblestone",null],
+      [null,"cobblestone",null],
+      [null,"stick",null]
+    ]
+  },
+  "stone_hoe": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["cobblestone","cobblestone",null],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+
+  "iron_pickaxe": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot","iron_ingot","iron_ingot"],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "iron_axe":    { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot","iron_ingot",null],
+      ["iron_ingot","stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "iron_shovel": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"iron_ingot",null],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "iron_sword":  { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"iron_ingot",null],
+      [null,"iron_ingot",null],
+      [null,"stick",null]
+    ]
+  },
+  "iron_hoe":    { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot","iron_ingot",null],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+
+  "diamond_pickaxe": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["diamond","diamond","diamond"],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "diamond_axe":    { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["diamond","diamond",null],
+      ["diamond","stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "diamond_shovel": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"diamond",null],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+  "diamond_sword":  { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"diamond",null],
+      [null,"diamond",null],
+      [null,"stick",null]
+    ]
+  },
+  "diamond_hoe":    { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["diamond","diamond",null],
+      [null,"stick",null],
+      [null,"stick",null]
+    ]
+  },
+
+  "leather_helmet": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["leather","leather","leather"],
+      ["leather", null , "leather"],
+      [null, null, null]
+    ]
+  },
+  "leather_chestplate": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["leather", null , "leather"],
+      ["leather","leather","leather"],
+      ["leather","leather","leather"]
+    ]
+  },
+  "leather_leggings": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["leather","leather","leather"],
+      ["leather", null , "leather"],
+      ["leather", null , "leather"]
+    ]
+  },
+  "leather_boots": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["leather", null , "leather"],
+      ["leather", null , "leather"],
+      [null, null, null]
+    ]
+  },
+
+  "iron_helmet": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot","iron_ingot","iron_ingot"],
+      ["iron_ingot", null , "iron_ingot"],
+      [null, null, null]
+    ]
+  },
+  "iron_chestplate": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot", null , "iron_ingot"],
+      ["iron_ingot","iron_ingot","iron_ingot"],
+      ["iron_ingot","iron_ingot","iron_ingot"]
+    ]
+  },
+  "iron_leggings": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot","iron_ingot","iron_ingot"],
+      ["iron_ingot", null , "iron_ingot"],
+      ["iron_ingot", null , "iron_ingot"]
+    ]
+  },
+  "iron_boots": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot", null , "iron_ingot"],
+      ["iron_ingot", null , "iron_ingot"],
+      [null, null, null]
+    ]
+  },
+
+  "gold_helmet": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["gold_ingot","gold_ingot","gold_ingot"],
+      ["gold_ingot", null , "gold_ingot"],
+      [null, null, null]
+    ]
+  },
+  "gold_chestplate": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["gold_ingot", null , "gold_ingot"],
+      ["gold_ingot","gold_ingot","gold_ingot"],
+      ["gold_ingot","gold_ingot","gold_ingot"]
+    ]
+  },
+  "gold_leggings": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["gold_ingot","gold_ingot","gold_ingot"],
+      ["gold_ingot", null , "gold_ingot"],
+      ["gold_ingot", null , "gold_ingot"]
+    ]
+  },
+  "gold_boots": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["gold_ingot", null , "gold_ingot"],
+      ["gold_ingot", null , "gold_ingot"],
+      [null, null, null]
+    ]
+  },
+
+  "diamond_helmet": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["diamond","diamond","diamond"],
+      ["diamond", null , "diamond"],
+      [null, null, null]
+    ]
+  },
+  "diamond_chestplate": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["diamond", null , "diamond"],
+      ["diamond","diamond","diamond"],
+      ["diamond","diamond","diamond"]
+    ]
+  },
+  "diamond_leggings": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["diamond","diamond","diamond"],
+      ["diamond", null , "diamond"],
+      ["diamond", null , "diamond"]
+    ]
+  },
+  "diamond_boots": { "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["diamond", null , "diamond"],
+      ["diamond", null , "diamond"],
+      [null, null, null]
+    ]
+  },
+
+  /* =========================
+   * ORES / INGOTS / GEMS
+   * ========================= */
+  "coal_ore":      { "craftable": false, "from": "mining", "block": "coal_ore",    "tool": "pickaxe", "toolTier": 0 },
+  "iron_ore":      { "craftable": false, "from": "mining", "block": "iron_ore",    "tool": "pickaxe", "toolTier": 1 },
+  "gold_ore":      { "craftable": false, "from": "mining", "block": "gold_ore",    "tool": "pickaxe", "toolTier": 1 },
+  "diamond_ore":   { "craftable": false, "from": "mining", "block": "diamond_ore", "tool": "pickaxe", "toolTier": 2 },
+  "lapis_ore":     { "craftable": false, "from": "mining", "block": "lapis_ore",   "tool": "pickaxe", "toolTier": 1 },
+  "redstone_ore":  { "craftable": false, "from": "mining", "block": "redstone_ore","tool": "pickaxe", "toolTier": 2 },
+  "emerald_ore":   { "craftable": false, "from": "mining", "block": "emerald_ore", "tool": "pickaxe", "toolTier": 2 },
+  "quartz_ore":    { "craftable": false, "from": "mining", "block": "nether_quartz_ore", "tool": "pickaxe", "toolTier": 0 },
+
+  "coal":          { "craftable": false, "from": "drop", "source": "coal_ore" },
+  "iron_ingot":    { "craftable": true, "from": "smelting", "input": "iron_ore", "fuel": "coal", "count": 1 },
+  "gold_ingot":    { "craftable": true, "from": "smelting", "input": "gold_ore", "fuel": "coal", "count": 1 },
+  "diamond":       { "craftable": false, "from": "drop", "source": "diamond_ore" },
+  "lapis_lazuli":  { "craftable": false, "from": "drop", "source": "lapis_ore", "count": 4 },
+  "redstone":      { "craftable": false, "from": "drop", "source": "redstone_ore", "count": 4 },
+  "emerald":       { "craftable": false, "from": "drop", "source": "emerald_ore" },
+  "quartz":        { "craftable": false, "from": "drop", "source": "quartz_ore" },
+
+  "iron_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot","iron_ingot","iron_ingot"],
+      ["iron_ingot","iron_ingot","iron_ingot"],
+      ["iron_ingot","iron_ingot","iron_ingot"]
+    ]
+  },
+  "gold_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["gold_ingot","gold_ingot","gold_ingot"],
+      ["gold_ingot","gold_ingot","gold_ingot"],
+      ["gold_ingot","gold_ingot","gold_ingot"]
+    ]
+  },
+  "diamond_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["diamond","diamond","diamond"],
+      ["diamond","diamond","diamond"],
+      ["diamond","diamond","diamond"]
+    ]
+  },
+  "redstone_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["redstone","redstone","redstone"],
+      ["redstone","redstone","redstone"],
+      ["redstone","redstone","redstone"]
+    ]
+  },
+  "lapis_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["lapis_lazuli","lapis_lazuli","lapis_lazuli"],
+      ["lapis_lazuli","lapis_lazuli","lapis_lazuli"],
+      ["lapis_lazuli","lapis_lazuli","lapis_lazuli"]
+    ]
+  },
+  "emerald_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["emerald","emerald","emerald"],
+      ["emerald","emerald","emerald"],
+      ["emerald","emerald","emerald"]
+    ]
+  },
+
+  /* =========================
+   * STONE & VARIANTS
+   * ========================= */
+  "stone":        { "craftable": true, "from": "smelting", "input": "cobblestone", "fuel": "coal", "count": 1 },
+  "cobblestone":  { "craftable": false, "from": "mining", "block": "stone", "tool": "pickaxe", "toolTier": 0 },
+  "stone_bricks": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      ["stone","stone",null],
+      ["stone","stone",null],
+      [null,null,null]
+    ]
+  },
+  "cracked_stone_bricks": {
+    "craftable": true, "from": "smelting", "input": "stone_bricks", "fuel": "coal", "count": 1
+  },
+  "mossy_stone_bricks": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["stone_bricks","vine",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "chiseled_stone_bricks": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["stone_slab","stone_slab",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "stone_slab": {
+    "craftable": true, "count": 6, "from": "crafting",
+    "recipe": [
+      ["stone","stone","stone"],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "stone_stairs": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      ["stone", null, null],
+      ["stone","stone",null],
+      ["stone","stone","stone"]
+    ]
+  },
+
+  "dirt":        { "craftable": false, "from": "mining", "block": "dirt", "tool": "any", "toolTier": 0 },
+  "grass_block": { "craftable": false, "from": "mining", "block": "grass_block", "tool": "silk_touch", "toolTier": 0 },
+  "gravel":      { "craftable": false, "from": "mining", "block": "gravel", "tool": "any", "toolTier": 0 },
+  "flint":       { "craftable": false, "from": "drop", "source": "gravel" },
+
+  "sand":        { "craftable": false, "from": "mining", "block": "sand", "tool": "any", "toolTier": 0 },
+  "sandstone": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["sand","sand",null],
+      ["sand","sand",null],
+      [null,null,null]
+    ]
+  },
+  "smooth_sandstone": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["sandstone","sandstone",null],
+      ["sandstone","sandstone",null],
+      [null,null,null]
+    ]
+  },
+  "chiseled_sandstone": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["sandstone_slab","sandstone_slab",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "sandstone_slab": {
+    "craftable": true, "count": 6, "from": "crafting",
+    "recipe": [
+      ["sandstone","sandstone","sandstone"],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "sandstone_stairs": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      ["sandstone",null,null],
+      ["sandstone","sandstone",null],
+      ["sandstone","sandstone","sandstone"]
+    ]
+  },
+
+  "clay_block": { "craftable": false, "from": "mining", "block": "clay", "tool": "any", "toolTier": 0 },
+  "clay_ball":  { "craftable": false, "from": "drop", "source": "clay_block", "count": 4 },
+  "brick_item": { "craftable": true, "from": "smelting", "input": "clay_ball", "fuel": "coal", "count": 1 },
+  "brick_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["brick_item","brick_item","brick_item"],
+      ["brick_item","brick_item","brick_item"],
+      ["brick_item","brick_item","brick_item"]
+    ]
+  },
+
+  "obsidian": { "craftable": false, "from": "mining", "block": "obsidian", "tool": "pickaxe", "toolTier": 3 },
+
+  /* =========================
+   * GLASS / PANES
+   * ========================= */
+  "glass": { "craftable": true, "from": "smelting", "input": "sand", "fuel": "coal", "count": 1 },
+  "glass_pane": {
+    "craftable": true, "count": 16, "from": "crafting",
+    "recipe": [
+      ["glass","glass","glass"],
+      ["glass","glass","glass"],
+      [null,null,null]
+    ]
+  },
+
+  /* =========================
+   * REDSTONE COMPONENTS
+   * ========================= */
+  "redstone_torch": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"redstone",null],
+      [null,"stick",null],
+      [null,null,null]
+    ]
+  },
+  "lever": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"cobblestone",null],
+      [null,"stick",null],
+      [null,null,null]
+    ]
+  },
+  "stone_button": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"stone",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "wooden_button": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"planks",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "stone_pressure_plate": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["stone","stone",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "wooden_pressure_plate": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks","planks",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "piston": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks","planks","planks"],
+      ["cobblestone","iron_ingot","cobblestone"],
+      [null,"redstone",null]
+    ]
+  },
+  "sticky_piston": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"slimeball",null],
+      [null,"piston",null],
+      [null,null,null]
+    ]
+  },
+  "dispenser": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["cobblestone","cobblestone","cobblestone"],
+      ["cobblestone","bow","cobblestone"],
+      ["cobblestone","redstone","cobblestone"]
+    ]
+  },
+  "dropper": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["cobblestone","cobblestone","cobblestone"],
+      ["cobblestone",   null     ,"cobblestone"],
+      ["cobblestone","redstone","cobblestone"]
+    ]
+  },
+  "hopper": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot", null , "iron_ingot"],
+      ["iron_ingot","chest","iron_ingot"],
+      [null,"iron_ingot",null]
+    ]
+  },
+  "redstone_repeater": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["redstone_torch","redstone","redstone_torch"],
+      ["stone","stone","stone"],
+      [null,null,null]
+    ]
+  },
+  "redstone_comparator": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["redstone_torch","quartz","redstone_torch"],
+      ["stone","stone","stone"],
+      [null,null,null]
+    ]
+  },
+  "daylight_sensor": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["glass","glass","glass"],
+      ["quartz","quartz","quartz"],
+      ["planks","planks","planks"]
+    ]
+  },
+  "trapped_chest": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"tripwire_hook",null],
+      [null,"chest",null],
+      [null,null,null]
+    ]
+  },
+
+  /* =========================
+   * DOORS / FENCES / GATES / STAIRS (WOOD)
+   * ========================= */
+  "wooden_door": {
+    "craftable": true, "count": 3, "from": "crafting",
+    "recipe": [
+      ["planks","planks",null],
+      ["planks","planks",null],
+      ["planks","planks",null]
+    ]
+  },
+  "iron_door": {
+    "craftable": true, "count": 3, "from": "crafting",
+    "recipe": [
+      ["iron_ingot","iron_ingot",null],
+      ["iron_ingot","iron_ingot",null],
+      ["iron_ingot","iron_ingot",null]
+    ]
+  },
+
+  "fence": {
+    "craftable": true, "count": 3, "from": "crafting",
+    "recipe": [
+      ["planks","stick","planks"],
+      ["planks","stick","planks"],
+      [null,null,null]
+    ]
+  },
+  "fence_gate": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["stick","planks","stick"],
+      ["stick","planks","stick"],
+      [null,null,null]
+    ]
+  },
+
+  "oak_stairs": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      ["planks",null,null],
+      ["planks","planks",null],
+      ["planks","planks","planks"]
+    ]
+  },
+  "oak_slab": {
+    "craftable": true, "count": 6, "from": "crafting",
+    "recipe": [
+      ["planks","planks","planks"],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+
+  /* =========================
+   * TORCH / LIGHTING
+   * ========================= */
+  "torch": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      [null,"coal",null],
+      [null,"stick",null],
+      [null,null,null]
+    ]
+  },
+  "jack_o_lantern": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"carved_pumpkin",null],
+      [null,"torch",null],
+      [null,null,null]
+    ]
+  },
+  "glowstone": { "craftable": false, "from": "mining", "block": "glowstone", "tool": "any", "toolTier": 0 },
+  "glowstone_dust": { "craftable": false, "from": "drop", "source": "glowstone", "count": 2 },
+  "glowstone_block": {
+    "aliases": ["glowstone"],
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["glowstone_dust","glowstone_dust",null],
+      ["glowstone_dust","glowstone_dust",null],
+      [null,null,null]
+    ]
+  },
+
+  /* =========================
+   * NETHER
+   * ========================= */
+  "netherrack": { "craftable": false, "from": "mining", "block": "netherrack", "tool": "any", "toolTier": 0 },
+  "soul_sand": { "craftable": false, "from": "mining", "block": "soul_sand", "tool": "any", "toolTier": 0 },
+  "nether_brick_item": { "craftable": true, "from": "smelting", "input": "netherrack", "fuel": "coal", "count": 1 },
+  "nether_brick_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["nether_brick_item","nether_brick_item",null],
+      ["nether_brick_item","nether_brick_item",null],
+      [null,null,null]
+    ]
+  },
+  "nether_brick_fence": {
+    "craftable": true, "count": 6, "from": "crafting",
+    "recipe": [
+      ["nether_brick_block","nether_brick_block","nether_brick_block"],
+      ["nether_brick_block","nether_brick_block","nether_brick_block"],
+      [null,null,null]
+    ]
+  },
+  "nether_brick_stairs": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      ["nether_brick_block",null,null],
+      ["nether_brick_block","nether_brick_block",null],
+      ["nether_brick_block","nether_brick_block","nether_brick_block"]
+    ]
+  },
+  "quartz_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["quartz","quartz",null],
+      ["quartz","quartz",null],
+      [null,null,null]
+    ]
+  },
+  "chiseled_quartz_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["quartz_slab","quartz_slab",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "quartz_pillar": {
+    "craftable": true, "count": 2, "from": "crafting",
+    "recipe": [
+      [null,"quartz_block",null],
+      [null,"quartz_block",null],
+      [null,null,null]
+    ]
+  },
+  "quartz_slab": {
+    "craftable": true, "count": 6, "from": "crafting",
+    "recipe": [
+      ["quartz_block","quartz_block","quartz_block"],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "quartz_stairs": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      ["quartz_block",null,null],
+      ["quartz_block","quartz_block",null],
+      ["quartz_block","quartz_block","quartz_block"]
+    ]
+  },
+  "blaze_rod": { "craftable": false, "from": "mob", "mob": "blaze" },
+  "blaze_powder": {
+    "craftable": true, "count": 2, "from": "crafting",
+    "recipe": [
+      [null,"blaze_rod",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "magma_cream": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"blaze_powder",null],
+      [null,"slimeball",null],
+      [null,null,null]
+    ]
+  },
+  "nether_wart": { "craftable": false, "from": "structure", "source": "nether_fortress" },
+  "ghast_tear": { "craftable": false, "from": "mob", "mob": "ghast" },
+
+  /* =========================
+   * END
+   * ========================= */
+  "end_stone": { "craftable": false, "from": "mining", "block": "end_stone", "tool": "pickaxe", "toolTier": 0 },
+  "ender_pearl": { "craftable": false, "from": "mob", "mob": "enderman" },
+  "eye_of_ender": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"ender_pearl",null],
+      [null,"blaze_powder",null],
+      [null,null,null]
+    ]
+  },
+
+  /* =========================
+   * FOOD / FARMING
+   * ========================= */
+  "wheat_seeds": { "craftable": false, "from": "farming", "source": "grass" },
+  "wheat":       { "craftable": false, "from": "farming" },
+  "bread": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"wheat",null],
+      [null,"wheat",null],
+      [null,"wheat",null]
+    ]
+  },
+  "pumpkin": { "craftable": false, "from": "farming" },
+  "carved_pumpkin": { "craftable": false, "from": "craft" },
+  "melon": { "craftable": false, "from": "farming" },
+  "melon_seeds": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"melon",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "pumpkin_seeds": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      [null,"pumpkin",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "sugar_cane": { "craftable": false, "from": "farming" },
+  "sugar": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"sugar_cane",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+  "egg": { "craftable": false, "from": "mob", "mob": "chicken" },
+  "milk_bucket": { "craftable": false, "from": "mob", "mob": "cow" },
+  "cake": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["milk_bucket","milk_bucket","milk_bucket"],
+      ["sugar","egg","sugar"],
+      ["wheat","wheat","wheat"]
+    ]
+  },
+  "cookie": {
+    "craftable": true, "count": 8, "from": "crafting",
+    "recipe": [
+      [null,"cocoa_beans",null],
+      [null,"wheat",null],
+      [null,null,null]
+    ]
+  },
+  "golden_apple": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["gold_ingot","gold_ingot","gold_ingot"],
+      ["gold_ingot","apple","gold_ingot"],
+      ["gold_ingot","gold_ingot","gold_ingot"]
+    ]
+  },
+
+  "raw_beef": { "craftable": false, "from": "mob", "mob": "cow" },
+  "steak": { "craftable": true, "from": "smelting", "input": "raw_beef", "fuel": "coal", "count": 1 },
+  "raw_porkchop": { "craftable": false, "from": "mob", "mob": "pig" },
+  "cooked_porkchop": { "craftable": true, "from": "smelting", "input": "raw_porkchop", "fuel": "coal", "count": 1 },
+  "raw_chicken": { "craftable": false, "from": "mob", "mob": "chicken" },
+  "cooked_chicken": { "craftable": true, "from": "smelting", "input": "raw_chicken", "fuel": "coal", "count": 1 },
+  "raw_mutton": { "craftable": false, "from": "mob", "mob": "sheep" },
+  "cooked_mutton": { "craftable": true, "from": "smelting", "input": "raw_mutton", "fuel": "coal", "count": 1 },
+  "raw_fish": { "craftable": false, "from": "fishing" },
+  "cooked_fish": { "craftable": true, "from": "smelting", "input": "raw_fish", "fuel": "coal", "count": 1 },
+  "potato": { "craftable": false, "from": "farming" },
+  "baked_potato": { "craftable": true, "from": "smelting", "input": "potato", "fuel": "coal", "count": 1 },
+  "carrot": { "craftable": false, "from": "farming" },
+  "apple": { "craftable": false, "from": "drop", "source": "oak_leaves" },
+  "cocoa_beans": { "craftable": false, "from": "mining", "block": "cocoa", "tool": "any", "toolTier": 0 },
+
+  /* =========================
+   * WOOL / DYES (basic)
+   * ========================= */
+  "string": { "craftable": false, "from": "mob", "mob": "spider" },
+  "wool": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["string","string",null],
+      ["string","string",null],
+      [null,null,null]
+    ],
+    "notes": "Produces white wool (undeyed)."
+  },
+  "bed": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["wool","wool","wool"],
+      ["planks","planks","planks"],
+      [null,null,null]
+    ]
+  },
+
+  /* =========================
+   * MISC BLOCKS
+   * ========================= */
+  "anvil": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_block","iron_block","iron_block"],
+      [null,"iron_ingot",null],
+      ["iron_ingot","iron_ingot","iron_ingot"]
+    ]
+  },
+  "enchanting_table": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"book",null],
+      ["diamond","obsidian","diamond"],
+      ["obsidian","obsidian","obsidian"]
+    ]
+  },
+  "beacon": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["glass","glass","glass"],
+      ["glass","nether_star","glass"],
+      ["obsidian","obsidian","obsidian"]
+    ]
+  },
+  "furnace": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["cobblestone","cobblestone","cobblestone"],
+      ["cobblestone",null,"cobblestone"],
+      ["cobblestone","cobblestone","cobblestone"]
+    ]
+  },
+  "workbench": { "aliases": ["crafting_table"], "craftable": false, "from": "alias" },
+
+  "cauldron": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot", null , "iron_ingot"],
+      ["iron_ingot", null , "iron_ingot"],
+      ["iron_ingot","iron_ingot","iron_ingot"]
+    ]
+  },
+  "brewing_stand": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"blaze_rod",null],
+      ["cobblestone","cobblestone","cobblestone"],
+      [null,null,null]
+    ]
+  },
+
+  "bucket": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot", null , "iron_ingot"],
+      [null,"iron_ingot",null],
+      [null,null,null]
+    ]
+  },
+  "flint_and_steel": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"iron_ingot",null],
+      ["flint",null,null],
+      [null,null,null]
+    ]
+  },
+  "compass": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"iron_ingot",null],
+      ["iron_ingot","redstone","iron_ingot"],
+      [null,"iron_ingot",null]
+    ]
+  },
+  "clock": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"gold_ingot",null],
+      ["gold_ingot","redstone","gold_ingot"],
+      [null,"gold_ingot",null]
+    ]
+  },
+
+  "tnt": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["sand","gunpowder","sand"],
+      ["gunpowder","sand","gunpowder"],
+      ["sand","gunpowder","sand"]
+    ]
+  },
+  "gunpowder": { "craftable": false, "from": "mob", "mob": "creeper" },
+
+  "note_block": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks","planks","planks"],
+      ["planks","redstone","planks"],
+      ["planks","planks","planks"]
+    ]
+  },
+  "jukebox": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["planks","planks","planks"],
+      ["planks","diamond","planks"],
+      ["planks","planks","planks"]
+    ]
+  },
+
+  "rail": {
+    "craftable": true, "count": 16, "from": "crafting",
+    "recipe": [
+      ["iron_ingot",null,"iron_ingot"],
+      ["iron_ingot","stick","iron_ingot"],
+      ["iron_ingot",null,"iron_ingot"]
+    ]
+  },
+  "powered_rail": {
+    "craftable": true, "count": 6, "from": "crafting",
+    "recipe": [
+      ["gold_ingot",null,"gold_ingot"],
+      ["gold_ingot","stick","gold_ingot"],
+      ["gold_ingot","redstone","gold_ingot"]
+    ]
+  },
+  "detector_rail": {
+    "craftable": true, "count": 6, "from": "crafting",
+    "recipe": [
+      ["iron_ingot",null,"iron_ingot"],
+      ["iron_ingot","stone_pressure_plate","iron_ingot"],
+      ["iron_ingot","redstone","iron_ingot"]
+    ]
+  },
+  "activator_rail": {
+    "craftable": true, "count": 6, "from": "crafting",
+    "recipe": [
+      ["iron_ingot",null,"iron_ingot"],
+      ["iron_ingot","redstone_torch","iron_ingot"],
+      ["iron_ingot","stick","iron_ingot"]
+    ]
+  },
+  "minecart": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot", null , "iron_ingot"],
+      ["iron_ingot","iron_ingot","iron_ingot"],
+      [null,null,null]
+    ]
+  },
+  "chest_minecart": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"chest",null],
+      [null,"minecart",null],
+      [null,null,null]
+    ]
+  },
+  "furnace_minecart": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"furnace",null],
+      [null,"minecart",null],
+      [null,null,null]
+    ]
+  },
+  "tnt_minecart": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"tnt",null],
+      [null,"minecart",null],
+      [null,null,null]
+    ]
+  },
+  "hopper_minecart": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      [null,"hopper",null],
+      [null,"minecart",null],
+      [null,null,null]
+    ]
+  },
+
+  /* =========================
+   * DOORS/PLATES/TRAPDOORS/STAIRS MORE
+   * ========================= */
+  "trapdoor": {
+    "craftable": true, "count": 2, "from": "crafting",
+    "recipe": [
+      ["planks","planks","planks"],
+      ["planks","planks","planks"],
+      [null,null,null]
+    ]
+  },
+  "iron_trapdoor": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot","iron_ingot","iron_ingot"],
+      ["iron_ingot","iron_ingot","iron_ingot"],
+      [null,null,null]
+    ]
+  },
+
+  /* =========================
+   * WOOD TYPES (gatherables)
+   * ========================= */
+  "oak_leaves":     { "craftable": false, "from": "mining", "block": "oak_leaves", "tool": "shears", "toolTier": 0 },
+  "spruce_leaves":  { "craftable": false, "from": "mining", "block": "spruce_leaves", "tool": "shears", "toolTier": 0 },
+  "birch_leaves":   { "craftable": false, "from": "mining", "block": "birch_leaves", "tool": "shears", "toolTier": 0 },
+  "jungle_leaves":  { "craftable": false, "from": "mining", "block": "jungle_leaves", "tool": "shears", "toolTier": 0 },
+  "acacia_leaves":  { "craftable": false, "from": "mining", "block": "acacia_leaves", "tool": "shears", "toolTier": 0 },
+  "dark_oak_leaves":{ "craftable": false, "from": "mining", "block": "dark_oak_leaves", "tool": "shears", "toolTier": 0 },
+
+  "oak_sapling":    { "craftable": false, "from": "drop", "source": "oak_leaves" },
+  "spruce_sapling": { "craftable": false, "from": "drop", "source": "spruce_leaves" },
+  "birch_sapling":  { "craftable": false, "from": "drop", "source": "birch_leaves" },
+  "jungle_sapling": { "craftable": false, "from": "drop", "source": "jungle_leaves" },
+  "acacia_sapling": { "craftable": false, "from": "drop", "source": "acacia_leaves" },
+  "dark_oak_sapling": { "craftable": false, "from": "drop", "source": "dark_oak_leaves" },
+
+  /* =========================
+   * SMELTABLE FUELS / MISC
+   * ========================= */
+  "charcoal": { "craftable": true, "from": "smelting", "input": "log", "fuel": "planks", "count": 1 },
+  "stick_fuel": { "craftable": false, "from": "fuel", "burnTime": 100 },
+  "coal_fuel":  { "craftable": false, "from": "fuel", "burnTime": 1600 },
+
+  /* =========================
+   * SIMPLE MOB DROPS (loot routes)
+   * ========================= */
+  "feather":   { "craftable": false, "from": "mob", "mob": "chicken" },
+  "leather":   { "craftable": false, "from": "mob", "mob": "cow" },
+  "rotten_flesh": { "craftable": false, "from": "mob", "mob": "zombie" },
+  "bone":      { "craftable": false, "from": "mob", "mob": "skeleton" },
+  "spider_eye":{ "craftable": false, "from": "mob", "mob": "spider" },
+  "ender_eye": { "aliases": ["eye_of_ender"], "craftable": false, "from": "alias" },
+  "slimeball": { "craftable": false, "from": "mob", "mob": "slime" },
+
+  /* =========================
+   * SHEARS / BOW / ARROWS / FISHING
+   * ========================= */
+  "shears": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["iron_ingot",null,null],
+      [null,"iron_ingot",null],
+      [null,null,null]
+    ]
+  },
+  "bow": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["stick","string",null],
+      [null,"stick","string"],
+      ["stick","string",null]
+    ]
+  },
+  "arrow": {
+    "craftable": true, "count": 4, "from": "crafting",
+    "recipe": [
+      [null,"flint",null],
+      [null,"stick",null],
+      [null,"feather",null]
+    ]
+  },
+  "fishing_rod": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["stick",null,"string"],
+      [null,"stick","string"],
+      ["stick",null,"string"]
+    ]
+  },
+
+  /* =========================
+   * DOORBELLS (bells not in 1.8); TRIPWIRE, HOOKS
+   * ========================= */
+  "tripwire_hook": {
+    "craftable": true, "count": 2, "from": "crafting",
+    "recipe": [
+      [null,"iron_ingot",null],
+      [null,"stick",null],
+      [null,"planks",null]
+    ]
+  },
+  "string_tripwire": { "aliases": ["tripwire"], "craftable": false, "from": "alias" },
+
+  /* =========================
+   * VILLAGE / FARM DECOR
+   * ========================= */
+  "hay_bale": {
+    "craftable": true, "count": 1, "from": "crafting",
+    "recipe": [
+      ["wheat","wheat","wheat"],
+      ["wheat","wheat","wheat"],
+      ["wheat","wheat","wheat"]
+    ]
+  },
+  "carpet": {
+    "craftable": true, "count": 3, "from": "crafting",
+    "recipe": [
+      ["wool","wool",null],
+      [null,null,null],
+      [null,null,null]
+    ]
+  },
+
+  /* =========================
+   * SPECIALS / UTILITY
+   * ========================= */
+  "ladder_up": { "aliases": ["ladder"], "craftable": false, "from": "alias" },
+  "torch_stack": { "aliases": ["torch"], "craftable": false, "from": "alias" },
+
+  /* =========================
+   * DO NOT EDIT BELOW — INTERNAL KEYS USED BY BOT
+   * ========================= */
+  "__schema": {
+    "fields": {
+      "craftable": "boolean",
+      "from": "crafting|mining|smelting|drop|mob|structure|farming|fuel|alias",
+      "recipe": "3x3 array of item ids or null, for crafting",
+      "input": "for smelting: input item id",
+      "fuel": "preferred fuel item id (optional)",
+      "count": "result count (default 1)",
+      "block": "for mining: block id in world",
+      "tool": "tool name required, e.g. pickaxe/axe/shears/silk_touch/any",
+      "toolTier": "0..3",
+      "aliases": "array of synonymous ids"
+    }
+  }
+}
