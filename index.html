@@ -1,51 +1,63 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Eaglercraft + F1shPr0</title>
-    <link rel="stylesheet" href="f1shpro.css" />
-  </head>
-  <body>
-    <!-- Game bootstrap (replace with your actual eaglercraft game script) -->
-    <script src="eaglercraft.js"></script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>F1shPr0 Client — Eaglercraft 1.8.8</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./f1shpr0.css" />
+</head>
+<body>
+  <!-- Load the original Eaglercraft client -->
+  <iframe id="game-frame" src="Release 1.8.8.html" frameborder="0"></iframe>
 
-    <!-- Our Client -->
-    <script src="f1shpro.js"></script>
+  <!-- Bot Control Overlay -->
+  <div id="f1-ui" class="f1-panel" style="display:none">
+    <div class="f1-header">
+      <span>F1shPr0 — Fishtone Bot Client</span>
+      <button id="f1-close">×</button>
+    </div>
 
-    <!-- GUI Overlay -->
-    <div id="f1-ui" class="f1-panel" style="display:none">
-      <div class="f1-header">
-        <span>F1shPr0 — Fishtone</span>
-        <button id="f1-close">×</button>
+    <div class="f1-tabs">
+      <button data-tab="path" class="active">Path</button>
+      <button data-tab="actions">Actions</button>
+      <button data-tab="settings">Settings</button>
+    </div>
+
+    <div class="f1-tab active" id="f1-tab-path">
+      <div class="f1-row">
+        <label>X</label><input id="f1-x" type="number" step="1" />
+        <label>Y</label><input id="f1-y" type="number" step="1" />
+        <label>Z</label><input id="f1-z" type="number" step="1" />
       </div>
-      <div class="f1-tabs">
-        <button data-tab="path" class="active">Path</button>
-        <button data-tab="actions">Actions</button>
-        <button data-tab="settings">Settings</button>
+      <div class="f1-row">
+        <button id="f1-goto">Goto</button>
+        <button id="f1-stop">Stop</button>
+        <button id="f1-goto-look">Goto Look Block</button>
       </div>
+      <div class="f1-row"><span id="f1-status">idle</span></div>
+    </div>
 
-      <div class="f1-tab active" id="f1-tab-path">
-        <div class="f1-row">
-          <label>X</label><input id="f1-x" type="number" step="1">
-          <label>Y</label><input id="f1-y" type="number" step="1">
-          <label>Z</label><input id="f1-z" type="number" step="1">
-        </div>
-        <div class="f1-row">
-          <button id="f1-goto">Goto</button>
-          <button id="f1-stop">Stop</button>
-        </div>
-        <div id="f1-status">Idle</div>
+    <div class="f1-tab" id="f1-tab-actions">
+      <div class="f1-row">
+        <button id="f1-mine-front">Mine Front Block</button>
+        <button id="f1-bridge">Bridge Forward</button>
       </div>
-
-      <div class="f1-tab" id="f1-tab-actions">
-        <button id="f1-mine">Mine Block Ahead</button>
-        <button id="f1-bridge">Bridge Gap</button>
-      </div>
-
-      <div class="f1-tab" id="f1-tab-settings">
-        <label><input type="checkbox" id="f1-break-blocks"> Allow breaking</label><br>
-        <label><input type="checkbox" id="f1-place-blocks"> Allow placing</label>
+      <div class="f1-row">
+        <button id="f1-build-1up">Step Up</button>
+        <button id="f1-craft-bench">Craft Crafting Table</button>
       </div>
     </div>
-  </body>
+
+    <div class="f1-tab" id="f1-tab-settings">
+      <div class="f1-row">
+        <label><input id="f1-allow-break" type="checkbox" /> Allow Block Breaking</label>
+      </div>
+      <div class="f1-row">
+        <label><input id="f1-allow-place" type="checkbox" /> Allow Placing Blocks</label>
+      </div>
+    </div>
+  </div>
+
+  <script src="./f1shpr0.js"></script>
+</body>
 </html>
