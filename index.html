@@ -4,33 +4,31 @@
   <meta charset="UTF-8" />
   <title>F1shPr0 Client — Eaglercraft 1.8.8</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    html, body { height: 100%; margin: 0; background: #0b0f12; }
-    #game-frame {
-      position: fixed; inset: 0; width: 100%; height: 100%;
-      border: 0; background: #000;
-    }
-  </style>
   <link rel="stylesheet" href="./f1shpr0.css" />
 </head>
 <body>
-  <!-- Load the original Eaglercraft client inside an iframe. 
-       IMPORTANT: keep this file and Release 1.8.8.html on the same origin (folder/domain)
-       so the bot can access the game context. -->
-  <iframe id="game-frame" src="Release 1.8.8.html"></iframe>
+  <!-- Load the original Eaglercraft client -->
+  <iframe id="game-frame" src="Release 1.8.8.html" frameborder="0"
+          style="width:100vw; height:100vh; border:none;"></iframe>
 
-  <!-- Bot Control Overlay (Right Shift to open, Right Ctrl to close) -->
+  <!-- Quick open button -->
+  <button id="f1-open"
+          style="position:fixed;top:10px;right:10px;z-index:9999;padding:6px 12px;
+                 background:#222;color:#0ff;border:none;border-radius:8px;cursor:pointer;">
+    🐟 Bot
+  </button>
+
+  <!-- Bot Control Overlay -->
   <div id="f1-ui" class="f1-panel" style="display:none">
     <div class="f1-header">
-      <span>F1shPr0 — Fishtone Bot</span>
-      <button id="f1-close" title="Right Ctrl">×</button>
+      <span>F1shPr0 — Fishtone Bot Client</span>
+      <button id="f1-close">×</button>
     </div>
 
     <div class="f1-tabs">
       <button data-tab="path" class="active">Path</button>
       <button data-tab="actions">Actions</button>
       <button data-tab="settings">Settings</button>
-      <button data-tab="debug">Debug</button>
     </div>
 
     <div class="f1-tab active" id="f1-tab-path">
@@ -44,9 +42,7 @@
         <button id="f1-stop">Stop</button>
         <button id="f1-goto-look">Goto Look Block</button>
       </div>
-      <div class="f1-row">
-        <span id="f1-status">idle</span>
-      </div>
+      <div class="f1-row"><span id="f1-status">idle</span></div>
     </div>
 
     <div class="f1-tab" id="f1-tab-actions">
@@ -55,29 +51,30 @@
         <button id="f1-bridge">Bridge Forward</button>
       </div>
       <div class="f1-row">
-        <button id="f1-step-up">Build Step Up</button>
+        <button id="f1-build-1up">Step Up</button>
         <button id="f1-craft-bench">Craft Crafting Table</button>
       </div>
     </div>
 
     <div class="f1-tab" id="f1-tab-settings">
       <div class="f1-row">
-        <label><input id="f1-allow-break" type="checkbox" /> Allow Breaking</label>
+        <label><input id="f1-allow-break" type="checkbox" /> Allow Block Breaking</label>
       </div>
       <div class="f1-row">
-        <label><input id="f1-allow-place" type="checkbox" /> Allow Placing</label>
+        <label><input id="f1-allow-place" type="checkbox" /> Allow Placing Blocks</label>
       </div>
-      <div class="f1-row">
-        <label>Max Nodes</label><input id="f1-maxnodes" type="number" value="800" min="200" max="5000" />
-        <label>Range</label><input id="f1-range" type="number" value="64" min="16" max="256" />
-      </div>
-    </div>
-
-    <div class="f1-tab" id="f1-tab-debug">
-      <pre id="f1-log" class="f1-log"></pre>
     </div>
   </div>
 
   <script src="./f1shpr0.js"></script>
+  <script>
+    // open / close logic
+    document.getElementById("f1-open").onclick = () => {
+      document.getElementById("f1-ui").style.display = "block";
+    };
+    document.getElementById("f1-close").onclick = () => {
+      document.getElementById("f1-ui").style.display = "none";
+    };
+  </script>
 </body>
 </html>
