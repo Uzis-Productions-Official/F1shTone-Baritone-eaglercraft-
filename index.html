@@ -1,65 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
   <title>F1shPr0 Bot Client</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #1e1e1e;
-      color: white;
+    :root { --bg:#0c1116; --card:#121820; --ink:#e6fff4; --muted:#a6c9bd; --accent:#19f5a4; }
+    html,body { height:100%; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family: ui-monospace, Menlo, Consolas, monospace; }
+    header { padding:14px 18px; text-align:center; font-weight:700; letter-spacing:.5px; color:#bfffe9; }
+    #f1Menu {
+      display:none; position:fixed; top:48px; left:48px; width:520px; max-height:80vh; overflow:auto;
+      background:linear-gradient(180deg, rgba(18,24,32,.98), rgba(12,17,22,.98));
+      border:1px solid #1b2b2b; border-radius:14px; box-shadow:0 20px 50px #0008; padding:16px; z-index:99999;
     }
-    #menu {
-      position: fixed;
-      top: 50px;
-      left: 50px;
-      width: 300px;
-      padding: 15px;
-      background: rgba(30,30,30,0.95);
-      border: 2px solid #555;
-      border-radius: 8px;
-      display: none;
-      z-index: 9999;
-    }
-    #menu h2 {
-      margin-top: 0;
-    }
-    button {
-      width: 100%;
-      margin: 4px 0;
-      padding: 8px;
-      background: #2e8b57;
-      border: none;
-      border-radius: 5px;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    button:hover {
-      background: #3cb371;
-    }
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .btn { padding:8px 10px; border:1px solid #2a3f3f; border-radius:10px; background:#0e151b; color:var(--ink); cursor:pointer; }
+    .btn:hover { border-color:#3a5; }
+    .btn.primary { border-color:var(--accent); color:#dff; }
     input, select {
-      width: 100%;
-      margin: 4px 0;
-      padding: 6px;
-      border-radius: 5px;
-      border: 1px solid #555;
+      background:#0a1116; color:var(--ink); border:1px solid #233; border-radius:10px; padding:8px;
     }
+    .card { background:var(--card); border:1px solid #1a2530; border-radius:12px; padding:12px; }
+    .k { color:#9ff; }
+    .muted { color:var(--muted); font-size:12px; }
+    .tabbar { display:flex; gap:8px; margin-bottom:10px; }
+    .tabbar .btn { background:#0b1117; }
+    .tabbar .btn.active { background:#101820; border-color:var(--accent); }
+    .log { height:150px; overflow:auto; background:#0a1116; border:1px solid #1a2930; border-radius:10px; padding:8px; font-size:12px; }
+    .two { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .pill { border:1px solid #2a4; padding:2px 8px; border-radius:999px; }
+    canvas { image-rendering: pixelated; }
+    #buildPanel { display:grid; grid-template-columns: 260px 1fr; gap:12px; align-items:start; }
+    #palette { display:grid; grid-template-columns: repeat(2, 1fr); gap:6px; max-height:240px; overflow:auto; }
+    .palbtn { text-align:left; font-size:12px; }
+    #materials { font-size:12px; line-height:1.5; }
+    a.dl { color:var(--accent); text-decoration:none; }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center; margin-top:20px;">F1shPr0 Bot Client</h1>
+  <header>F1shPr0 Bot Client — open <span class="pill">Right Shift</span> • close <span class="pill">Right Ctrl</span></header>
 
-  <div id="menu">
-    <h2>F1shPr0 Controls</h2>
-    <button onclick="BotUI.promptGet()">Get Item</button>
-    <button onclick="BotUI.promptGoto()">Goto Coords</button>
-    <button onclick="BotUI.promptTrack()">Track Player</button>
-    <button onclick="BotUI.openBuild()">Build</button>
-    <button onclick="BotUI.close()">Close Menu</button>
-    <div id="output" style="margin-top:10px; font-size:13px;"></div>
+  <div id="f1Menu">
+    <div class="tabbar">
+      <button id="tabHome" class="btn active" onclick="F1.ui.tab('home')">Home</button>
+      <button id="tabBuild" class="btn" onclick="F1.ui.tab('build')">Build</button>
+      <button id="tabSettings" class="btn" onclick="F1.ui.tab('settings')">Settings</button>
+      <div style="flex:1"></div>
+      <span id="modePill" class="muted">mode: sim</span>
+    </div>
+
+    <!-- HOME -->
+    <div id="viewHome">
+      <div class="row" style="margin-bottom:8px;">
+        <button class="btn primary" onclick="F1.ui.get()">Get</button>
+        <button class="btn" onclick="F1.ui.goto()">Goto</button>
+        <button class="btn" onclick="F1.ui.track()">Track</button>
+        <button class="btn" onclick="F1.ui.quick()">Starter Tools</button>
+        <button class="btn" onclick="F1.ui.clearLog()">Clear Log</button>
+      </div>
+      <div id="panelHome" class="card"></div>
+      <div style="height:8px"></div>
+      <div class="log card" id="botLog"></div>
+      <div class="muted">TIP: this page works standalone in <b>SIM</b> mode. Place it next to your
+        <span class="k">Release 1.8.8.html</span> and load after the game to hook a real client.</div>
+    </div>
+
+    <!-- BUILD -->
+    <div id="viewBuild" style="display:none">
+      <div id="buildPanel">
+        <div class="card">
+          <div class="row" style="margin-bottom:8px;">
+            <input id="searchBlock" placeholder="Search blocks…" oninput="F1.build.filterPalette()" />
+            <select id="pxSize" onchange="F1.build.changePx()">
+              <option value="1">Pixel: 1 (1×1)</option>
+              <option value="2">Pixel: 2 (2×2)</option>
+              <option value="4">Pixel: 4 (4×4)</option>
+              <option value="8">Pixel: 8 (8×8)</option>
+            </select>
+          </div>
+          <div id="palette"></div>
+          <div class="muted" style="margin-top:8px;">Left-drag to paint, right-drag to erase.<br/>Current: <span id="currentBlock" class="k">stone</span></div>
+        </div>
+        <div class="card">
+          <canvas id="buildCanvas" width="256" height="256" style="border:1px solid #223; border-radius:8px; background:#000"></canvas>
+          <div class="row" style="margin-top:8px;">
+            <button class="btn" onclick="F1.build.clear()">Clear</button>
+            <button class="btn" onclick="F1.build.generate()">Generate Blueprint</button>
+            <button class="btn" onclick="F1.build.export()">Export JSON</button>
+            <button class="btn primary" onclick="F1.build.simulate()">Simulate Build</button>
+          </div>
+          <div id="materials" class="card" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="viewSettings" style="display:none">
+      <div class="two">
+        <div class="card">
+          <h3 style="margin:6px 0 8px;">Pathfinding</h3>
+          <div class="row">
+            <label>Max nodes <input id="optMaxNodes" type="number" value="4000" /></label>
+            <label>Step height <input id="optStep" type="number" step="0.25" value="1" /></label>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin:6px 0 8px;">Actions</h3>
+          <div class="row">
+            <label>Break timeout (ms) <input id="optBreakMs" type="number" value="6000" /></label>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <button class="btn" onclick="F1.saveSettings()">Save</button>
+        <button class="btn" onclick="F1.resetSettings()">Reset</button>
+      </div>
+    </div>
   </div>
 
   <script src="f1shpr0.js"></script>
