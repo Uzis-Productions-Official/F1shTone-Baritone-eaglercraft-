@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>F1shPr0 Builder</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 15px 0;
+    }
+
+    #toolbar {
+      margin: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    #toolbar button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #333;
+      color: white;
+    }
+
+    #toolbar button.active {
+      background: #0a0;
+    }
+
+    #canvasWrapper {
+      border: 2px solid #444;
+      background: #222;
+      position: relative;
+      margin-top: 10px;
+    }
+
+    canvas {
+      cursor: crosshair;
+    }
+
+    #exportBox {
+      margin-top: 15px;
+      width: 80%;
+      max-width: 600px;
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐟 F1shPr0 Builder</h1>
+  <p>Draw pixel art (1 pixel = 1 block, or scaled)</p>
+
+  <div id="toolbar">
+    <button onclick="setBlock('stone')">Stone</button>
+    <button onclick="setBlock('dirt')">Dirt</button>
+    <button onclick="setBlock('oak_planks')">Planks</button>
+    <button onclick="setBlock('glass')">Glass</button>
+    <button onclick="setBlock('wool_red')">Red Wool</button>
+    <button onclick="setBlock('wool_blue')">Blue Wool</button>
+    <button onclick="setBlock('erase')">Erase</button>
+    <button onclick="exportPlan()">Export Plan</button>
+  </div>
+
+  <div id="canvasWrapper">
+    <canvas id="builderCanvas" width="500" height="500"></canvas>
+  </div>
+
+  <div id="exportBox"></div>
+
+  <script>
+    const canvas = document.getElementById("builderCanvas");
+    const ctx = canvas.getContext("2d");
+    const gridSize = 20; // pixel size (20px per block)
+    let currentBlock = "stone";
+
+    const colors = {
+      "stone": "#777",
+      "dirt": "#8B4513",
+      "oak_planks": "#DEB887",
+      "glass": "#88DDEE",
+      "wool_red": "#FF3333",
+      "wool_blue": "#3366FF",
+      "erase": "#222"
+    };
+
+    const grid = Array(canvas.width / gridSize).fill().map(() => Array(canvas.height / gridSize).fill(""));
+
+    function drawGrid() {
+      ctx.fillStyle = "#222";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        for (let y = 0; y < canvas.height; y += gridSize) {
+          ctx.strokeStyle = "#333";
+          ctx.strokeRect(x, y, gridSize, gridSize);
+        }
+      }
+
+      for (let gx = 0; gx < grid.length; gx++) {
+        for (let gy = 0; gy < grid[gx].length; gy++) {
+          if (grid[gx][gy]) {
+            ctx.fillStyle = colors[grid[gx][gy]];
+            ctx.fillRect(gx * gridSize, gy * gridSize, gridSize, gridSize);
+          }
+        }
+      }
+    }
+
+    function setBlock(block) {
+      currentBlock = block;
+      document.querySelectorAll("#toolbar button").forEach(btn => btn.classList.remove("active"));
+      [...document.querySelectorAll("#toolbar button")].find(btn => btn.textContent.toLowerCase().includes(block.replace("_", " ")))?.classList.add("active");
+    }
+
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / gridSize);
+      const y = Math.floor((e.clientY - rect.top) / gridSize);
+      grid[x][y] = currentBlock === "erase" ? "" : currentBlock;
+      drawGrid();
+    });
+
+    function exportPlan() {
+      let plan = [];
+      for (let x = 0; x < grid.length; x++) {
+        for (let y = 0; y < grid[x].length; y++) {
+          if (grid[x][y]) {
+            plan.push({ x, y, block: grid[x][y] });
+          }
+        }
+      }
+      const exportBox = document.getElementById("exportBox");
+      exportBox.style.display = "block";
+      exportBox.textContent = JSON.stringify(plan, null, 2);
+    }
+
+    // Initial draw
+    drawGrid();
+  </script>
+</body>
+</html>
