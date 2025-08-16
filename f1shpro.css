@@ -1,1 +1,28 @@
-
+.f1-panel {
+  position: fixed;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 520px;
+  background: rgba(8, 12, 16, 0.96);
+  color: #aefcff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  border: 1px solid #38e1ff;
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(56,225,255,0.08);
+  padding: 12px;
+  z-index: 99999;
+  backdrop-filter: blur(6px);
+}
+.f1-header {
+  display: flex; align-items: center; justify-content: space-between;
+  font-weight: 700; letter-spacing: 0.3px; margin-bottom: 8px;
+}
+.f1-header button {
+  background: #ff3b3b; color: #fff; border: 0; border-radius: 10px;
+  width: 32px; height: 32px; cursor: pointer; font-size: 18px; line-height: 32px;
+}
+.f1-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+.f1-tabs button {
+  flex: 1; background: #0f151b; color: #8be9fd; border: 1px solid #2bd4ff;
+  border-radius: 10px; paddi
