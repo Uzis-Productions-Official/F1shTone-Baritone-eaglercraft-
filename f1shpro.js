@@ -1,485 +1,655 @@
-/* F1shPr0 — Fishtone bot for Eaglercraft 1.8.8
- * Works with:
- *  - index.html (iframe launcher)  -> talks to iframe.contentWindow
- *  - Release 1.8.8.html (direct)  -> talks to window directly
- *
- * Notes:
- * - This ships with a robust adapter layer to map Eaglercraft's player/world API.
- * - A* pathfinding across a 3D grid with step-up, step-down and jump.
- * - Optional breaking/placing (requires world mutation methods; see adapter).
- * - If a specific method isn't available in your build, the adapter falls back gracefully.
+/* F1shPr0 — Eaglercraft 1.8.8 bot
+ * Features:
+ *  - A* pathfinding (XZ grid, with Y stepping/jump/fall)
+ *  - Mining, placing, crafting (2x2 & 3x3)
+ *  - Autoplan: gather -> craft -> deliver
+ *  - Eagler adapter auto-detect (safe if not found)
  */
 
-/* -------------------- DOM / UI wiring -------------------- */
-(function bootstrapUI(){
-  const el = (id) => document.getElementById(id);
+const FLOG = (...a)=>F1shPr0.ui.log(a.map(x=>typeof x==='object'?JSON.stringify(x):x).join(' '));
+const wait = ms => new Promise(r=>setTimeout(r,ms));
 
-  const tabs = document.querySelectorAll('.f1-tabs button');
-  const tabPages = document.querySelectorAll('.f1-tab');
-  tabs.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tabs.forEach(b => b.classList.remove('active'));
-      tabPages.forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      el('f1-tab-' + btn.dataset.tab).classList.add('active');
+const EAGLER_MODE = 'auto';  // 'auto' | 'force' (force sim false) | 'sim'
+const FACE_DIRS = [
+  [ 0,-1, 0], // down
+  [ 0, 1, 0], // up
+  [ 0, 0,-1], // north
+  [ 0, 0, 1], // south
+  [-1, 0, 0], // west
+  [ 1, 0, 0], // east
+];
+
+const F1shPr0 = {
+  menuVisible:false,
+  items:{},
+  inventory:{}, // { itemId: count }
+  taskQueue:[],
+  settings:{
+    maxNodes:6000,
+    breakTimeout:6000,
+    stepHeight:1.0
+  },
+  world: null, player: null, adapter: null,
+  sim: { blocks:new Map(), entities:[], pos:{x:0,y:64,z:0}, yaw:0, pitch:0 },
+
+  async init() {
+    // load items
+    try {
+      const res = await fetch("items.json");
+      this.items = await res.json();
+      FLOG(`Loaded items: ${Object.keys(this.items).length}`);
+    } catch(e) { FLOG('items.json load error', e); }
+
+    // load settings
+    const s = localStorage.getItem('f1shpr0.settings');
+    if (s) Object.assign(this.settings, JSON.parse(s));
+
+    // set keybinds
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "ShiftRight") this.ui.toggle(true);
+      if (e.code === "ControlRight") this.ui.toggle(false);
     });
-  });
 
-  // Open/Close via keys (Right Shift / Right Ctrl)
-  const panel = el('f1-ui');
-  document.addEventListener('keydown', (e) => {
-    if (e.code === 'ShiftRight') panel.style.display = 'block';
-    if (e.code === 'ControlRight') panel.style.display = 'none';
-  });
-  const closeBtn = el('f1-close');
-  if (closeBtn) closeBtn.onclick = () => panel.style.display = 'none';
+    // detect eaglercraft
+    this.adapter = this.detectAdapter();
+    const modePill = document.getElementById('modePill');
+    if (this.adapter.kind === 'eagler') { modePill.textContent = 'Eaglercraft'; modePill.style.color = '#0f0'; }
+    else { modePill.textContent = 'Simulation'; modePill.style.color = '#ccc'; }
 
-  // Buttons
-  const setStatus = (s)=> el('f1-status') && (el('f1-status').textContent = s);
-  const logBox = el('f1-log');
-  const log = (...a)=>{ if(logBox){ logBox.textContent += a.join(' ') + '\n'; logBox.scrollTop = logBox.scrollHeight; } console.log('[Fishtone]',...a); };
+    // small palette for builder
+    this.build.initPalette(['stone','cobblestone','oak_log','planks','glass','torch']);
+  },
 
-  const ctx = GameContext(); // locate game window + adapter
-  if (!ctx) {
-    setStatus('no game context (same-origin required)');
-    console.warn('[Fishtone] Same-origin requirement: index.html and Release 1.8.8.html must be served from the same folder/domain.');
-    return;
-  }
-  const FT = Fishtone(ctx, { log, setStatus });
-
-  // Inputs
-  const ix=el('f1-x'), iy=el('f1-y'), iz=el('f1-z');
-
-  // Actions
-  const btnGoto = el('f1-goto');
-  btnGoto && btnGoto.addEventListener('click', () => {
-    if (!ix.value || !iy.value || !iz.value) return;
-    FT.goto(parseInt(ix.value,10), parseInt(iy.value,10), parseInt(iz.value,10));
-  });
-
-  const btnGotoLook = el('f1-goto-look');
-  btnGotoLook && btnGotoLook.addEventListener('click', async () => {
-    const blk = FT.lookBlock();
-    if (!blk) { setStatus('look at a block'); return; }
-    ix.value = blk.x; iy.value = blk.y; iz.value = blk.z;
-    FT.goto(blk.x, blk.y, blk.z);
-  });
-
-  const btnStop = el('f1-stop');
-  btnStop && btnStop.addEventListener('click', () => FT.stop());
-
-  const btnMineFront = el('f1-mine-front');
-  btnMineFront && btnMineFront.addEventListener('click', () => FT.mineFront());
-
-  const btnBridge = el('f1-bridge');
-  btnBridge && btnBridge.addEventListener('click', () => FT.bridgeForward());
-
-  const btnStepUp = el('f1-step-up');
-  btnStepUp && btnStepUp.addEventListener('click', () => FT.buildStepUp());
-
-  const btnCraftBench = el('f1-craft-bench');
-  btnCraftBench && btnCraftBench.addEventListener('click', () => FT.craftBench());
-
-  const cbBreak = el('f1-allow-break');
-  const cbPlace = el('f1-allow-place');
-  const maxNodes = el('f1-maxnodes');
-  const range = el('f1-range');
-
-  cbBreak && cbBreak.addEventListener('change', () => FT.settings.allowBreak = !!cbBreak.checked);
-  cbPlace && cbPlace.addEventListener('change', () => FT.settings.allowPlace = !!cbPlace.checked);
-  maxNodes && maxNodes.addEventListener('change', () => FT.settings.maxNodes = Math.max(200, parseInt(maxNodes.value,10)||800));
-  range && range.addEventListener('change', () => FT.settings.searchRange = Math.max(8, parseInt(range.value,10)||64));
-
-  // Expose for console testing
-  window.F1_Fishtone = FT;
-})();
-
-/* -------------------- Game context & adapter -------------------- */
-// Finds where the game lives (top window or in #game-frame) and returns an adapter
-function GameContext() {
-  const frame = document.getElementById('game-frame');
-  const win = frame ? frame.contentWindow : window;
-
-  try {
-    // Access test (fails if cross-origin)
-    const test = win.location.href;
-  } catch(e) { return null; }
-
-  // Try to discover likely globals
-  const mc = win.mc || win.eaglercraftX || win.game || null;
-
-  return {
-    win,
-    mc,
-    adapter: makeAdapter(win)
-  };
-}
-
-function makeAdapter(win) {
-  // Attempt to resolve world/player methods used across Eaglercraft builds.
-  const g = (p, ...keys) => keys.reduce((o,k)=> o&&o[k]!=null?o[k]:null, p);
-
-  // Candidate roots
-  const roots = [
-    win, win.mc, g(win,'eaglercraftX','game'), g(win,'eaglercraftX'),
-    g(win,'game'), g(win,'Minecraft')
-  ].filter(Boolean);
-
-  function findPlayer() {
-    for (const r of roots) {
-      const p = g(r,'thePlayer') || g(r,'player') || g(r,'localPlayer') || g(r,'playerController')?.player;
-      if (p && ('posX' in p) && ('posY' in p) && ('posZ' in p)) return p;
+  /* ================= UI ================= */
+  ui:{
+    toggle(state){
+      const m = document.getElementById('f1shpr0Menu');
+      F1shPr0.menuVisible = state;
+      m.style.display = state ? 'block' : 'none';
+    },
+    tab(name){
+      ['Home','Tasks','Build','Settings'].forEach(t=>{
+        document.getElementById('view'+t).style.display = (t.toLowerCase()===name) ? 'block' : 'none';
+        document.getElementById('tab'+t).classList.toggle('active', t.toLowerCase()===name);
+      });
+    },
+    log(line){
+      const el = document.getElementById('botLog');
+      const now = new Date().toLocaleTimeString();
+      el.innerHTML = `[${now}] ${line}<br>` + el.innerHTML;
+    },
+    get(){
+      const div = document.getElementById('panelHome');
+      div.innerHTML = `
+        <div class="row">
+          <input id="getItemInput" placeholder="item id (e.g. iron_pickaxe)" oninput="F1shPr0.ui.suggest()" />
+          <button class="primary" onclick="F1shPr0.startGet()">Get</button>
+        </div>
+        <div id="suggestions" class="hint"></div>
+      `;
+    },
+    suggest(){
+      const q = document.getElementById('getItemInput').value.toLowerCase();
+      const keys = Object.keys(F1shPr0.items);
+      const m = keys.filter(k=>k.includes(q)).slice(0,8);
+      document.getElementById('suggestions').textContent = m.length ? ('Suggestions: '+m.join(', ')) : '';
+    },
+    goto(){
+      const div = document.getElementById('panelHome');
+      div.innerHTML = `
+        <div class="row">
+          <input id="gotoX" placeholder="X"><input id="gotoY" placeholder="Y"><input id="gotoZ" placeholder="Z">
+          <button class="primary" onclick="F1shPr0.cmdGoto()">Go</button>
+        </div>`;
+    },
+    track(){
+      const div = document.getElementById('panelHome');
+      div.innerHTML = `
+        <div class="row">
+          <input id="trackName" placeholder="Player name">
+          <button class="primary" onclick="F1shPr0.cmdTrack()">Track</button>
+        </div>`;
+    },
+    quickWood(){
+      F1shPr0.enqueue({type:'get', item:'wooden_pickaxe', src:'Quick'});
+      F1shPr0.runTasks();
     }
-    return null;
-  }
+  },
 
-  function findWorld() {
-    for (const r of roots) {
-      const w = g(r,'theWorld') || g(r,'world') || g(r,'clientWorld') || g(r,'World');
-      if (w) return w;
-    }
-    return null;
-  }
+  saveSettings(){
+    const g = id=>document.getElementById(id).value;
+    this.settings.maxNodes = +g('optMaxNodes');
+    this.settings.breakTimeout = +g('optBreakTimeout');
+    this.settings.stepHeight = +g('optStepHeight');
+    localStorage.setItem('f1shpr0.settings', JSON.stringify(this.settings));
+    FLOG('Settings saved.');
+  },
+  resetSettings(){
+    localStorage.removeItem('f1shpr0.settings');
+    location.reload();
+  },
 
-  function getBlockId(w,x,y,z){
-    if (!w) return 0;
-    // Known patterns
-    if (typeof w.getBlockId === 'function') return w.getBlockId(x,y,z);
-    if (typeof w.getBlock === 'function') {
-      const b = w.getBlock(x,y,z);
-      if (b == null) return 0;
-      if (typeof b === 'number') return b;
-      if (typeof b.id === 'number') return b.id;
-      if (b.blockID != null) return b.blockID;
-    }
-    if (w.blocks && w.blocks[y] && w.blocks[y][x] && w.blocks[y][x][z] != null) {
-      return w.blocks[y][x][z];
-    }
-    return 0; // fallback: treat as air
-  }
+  /* =============== Planner API =============== */
+  startGet(){
+    const item = document.getElementById('getItemInput').value.trim().toLowerCase();
+    if (!this.items[item]) { FLOG('Unknown item: ', item); return; }
+    this.enqueue({type:'get', item});
+    this.runTasks();
+  },
+  enqueue(task){ this.taskQueue.push(task); this.renderTasks(); },
+  renderTasks(){
+    const el = document.getElementById('tasksList');
+    if (!el) return;
+    el.innerHTML = this.taskQueue.map((t,i)=>`<div>#${i} ${t.type} <span class="k">${t.item||''}</span></div>`).join('');
+  },
 
-  function setBlock(w,x,y,z,id){
-    if (!w) return false;
-    if (typeof w.setBlock === 'function') { w.setBlock(x,y,z,id); return true; }
-    if (typeof w.setBlockId === 'function') { w.setBlockId(x,y,z,id); return true; }
-    if (w.blocks && w.blocks[y] && w.blocks[y][x]) { w.blocks[y][x][z] = id; return true; }
+  async runTasks(){
+    while(this.taskQueue.length){
+      const t = this.taskQueue.shift();
+      this.renderTasks();
+      if (t.type==='get') { await this.obtainItem(t.item, 1); }
+      else if (t.type==='goto') { await this.pathTo(t.pos); }
+    }
+  },
+
+  /* =============== Core: obtain item =============== */
+  async obtainItem(item, count=1){
+    FLOG(`Obtain: ${item} x${count}`);
+    if (this.inventory[item] >= count){ FLOG('Already in inventory'); return true; }
+
+    const def = this.items[item];
+    if (!def){ FLOG('Unknown item'); return false; }
+
+    if (def.craftable){
+      // compute needed inputs from recipe grid
+      const needed = this.countRecipe(def.recipe, def.count||1, count);
+      for (const [ing, qty] of Object.entries(needed)){
+        if ((this.inventory[ing]||0) < qty){
+          await this.obtainItem(ing, qty - (this.inventory[ing]||0));
+        }
+      }
+      // craft (2x2 or 3x3)
+      const three = this.recipeNeeds3x3(def.recipe);
+      const ok = await this.craftGrid(def.recipe, three);
+      if (!ok){ FLOG('Craft failed:', item); return false; }
+      this.addInv(item, (def.count||1));
+      FLOG(`Crafted ${item} x${def.count||1}`);
+      return true;
+    }
+
+    // non-craftable paths
+    if (def.from === 'mining'){
+      const ok = await this.mine(def.block, def.tool||'pickaxe', def.toolTier||0, count);
+      if (ok){ this.addInv(item, def.count||1); }
+      return ok;
+    }
+    if (def.from === 'smelting'){
+      // ensure furnace + fuel
+      await this.obtainItem('furnace',1);
+      await this.obtainItem(def.input, count);
+      await this.obtainItem('coal',1); // simple fuel pick
+      const ok = await this.smelt(def.input, item, count);
+      if (ok) this.addInv(item, def.count||1);
+      return ok;
+    }
+    if (def.from === 'mob'){
+      const ok = await this.hunt(def.mob, count);
+      if (ok) this.addInv(item, count);
+      return ok;
+    }
+    if (def.from === 'drop'){
+      // blocks that drop items (like gravel -> flint)
+      const ok = await this.mine(def.source, 'any', 0, count);
+      if (ok) this.addInv(item, def.count||1);
+      return ok;
+    }
+
+    FLOG('No path for', item);
     return false;
-  }
+  },
 
-  function hitBlock(w,x,y,z){
-    // naive instant-break; replace with proper damage if you have API
-    return setBlock(w,x,y,z,0);
-  }
+  addInv(id, n){ this.inventory[id] = (this.inventory[id]||0) + n; },
 
-  function placeBlockFacing(w, x,y,z, blockId){
-    // Simple place at position
-    return setBlock(w,x,y,z,blockId);
-  }
-
-  function lookRay(winCtx, player, reach=5.0) {
-    // Very simple forward ray from player's yaw/pitch; requires yaw/pitch on player
-    if (player == null) return null;
-    const yaw = (player.rotationYaw || player.yaw || 0) * (Math.PI/180);
-    const pitch = (player.rotationPitch || player.pitch || 0) * (Math.PI/180);
-    const dirX = -Math.sin(yaw) * Math.cos(pitch);
-    const dirY = -Math.sin(pitch);
-    const dirZ =  Math.cos(yaw) * Math.cos(pitch);
-    const ox = (player.posX || 0);
-    const oy = (player.posY || 0) + (player.eyeHeight || 1.62);
-    const oz = (player.posZ || 0);
-    for (let t=0; t<=reach; t+=0.1) {
-      const x = Math.floor(ox + dirX * t);
-      const y = Math.floor(oy + dirY * t);
-      const z = Math.floor(oz + dirZ * t);
-      const w = findWorld();
-      if (!w) break;
-      const id = getBlockId(w,x,y,z);
-      if (id && id !== 0) return { x,y,z, id };
+  countRecipe(grid, outCountPerCraft=1, wantCount=1){
+    // flatten ingredients -> total counts * crafts
+    const perCraft = {};
+    grid.forEach(row=>row.forEach(cell=>{
+      if (!cell) return;
+      perCraft[cell] = (perCraft[cell]||0) + 1;
+    }));
+    // number of crafts needed to reach wantCount
+    const crafts = Math.ceil(wantCount / outCountPerCraft);
+    const res = {};
+    for(const [k,v] of Object.entries(perCraft)) res[k] = v*crafts;
+    return res;
+  },
+  recipeNeeds3x3(grid){
+    // if any ingredient is in row 3 or col 3 -> needs 3x3
+    for (let r=0;r<3;r++) for(let c=0;c<3;c++){
+      if (grid[r] && grid[r][c] && (r>1 || c>1)) return true;
     }
-    return null;
-  }
-
-  return {
-    findPlayer,
-    findWorld,
-    getBlockId,
-    setBlock,
-    hitBlock,
-    placeBlockFacing,
-    lookRay
-  };
-}
-
-/* -------------------- Core bot (A*, movement, actions) -------------------- */
-function Fishtone(ctx, ui) {
-  const { win, adapter } = ctx;
-  const { findPlayer, findWorld, getBlockId, setBlock, hitBlock, placeBlockFacing, lookRay } = adapter;
-
-  const state = {
-    active: false,
-    path: [],
-    currentIdx: 0,
-    settings: {
-      allowBreak: false,
-      allowPlace: false,
-      searchRange: 64,
-      maxNodes: 800
-    }
-  };
-
-  const api = {
-    settings: state.settings,
-
-    goto(x,y,z){
-      const player = findPlayer();
-      const world = findWorld();
-      if (!player || !world) return ui.setStatus('no player/world');
-      const start = toNode(player.posX, player.posY, player.posZ);
-      const goal = { x: Math.floor(x), y: Math.floor(y), z: Math.floor(z) };
-      const res = aStar(start, goal, world, state.settings);
-      if (!res) { ui.setStatus('no path'); ui.log('No path found'); state.active=false; return; }
-      state.path = res;
-      state.currentIdx = 0;
-      state.active = true;
-      ui.setStatus(`path len ${res.length}`);
-      ui.log('Path computed:', res.length, 'nodes');
-    },
-
-    stop(){
-      state.active = false;
-      state.path = [];
-      state.currentIdx = 0;
-      const p = findPlayer();
-      if (p){ p.motionX = 0; p.motionZ = 0; }
-      ui.setStatus('stopped');
-    },
-
-    lookBlock(){
-      const p = findPlayer();
-      return lookRay(win, p, 6.0);
-    },
-
-    mineFront(){
-      const p = findPlayer(), w = findWorld();
-      if (!p || !w) return ui.setStatus('no player/world');
-      const target = lookRay(win, p, 5.0);
-      if (!target) return ui.setStatus('no block in sight');
-      const ok = hitBlock(w, target.x, target.y, target.z);
-      ui.setStatus(ok ? `mined ${target.x},${target.y},${target.z}` : 'mine failed (adapter)');
-    },
-
-    bridgeForward(){
-      const p = findPlayer(), w = findWorld();
-      if (!p || !w) return ui.setStatus('no player/world');
-      const fx = Math.floor(p.posX);
-      const fy = Math.floor(p.posY) - 1;
-      const fz = Math.floor(p.posZ);
-      // place one block under feet (simple)
-      const ok = placeBlockFacing(w, fx, fy, fz, 1);
-      ui.setStatus(ok ? 'bridged under feet' : 'place failed (adapter)');
-    },
-
-    buildStepUp(){
-      const p = findPlayer(), w = findWorld();
-      if (!p || !w) return ui.setStatus('no player/world');
-      const x = Math.floor(p.posX);
-      const y = Math.floor(p.posY) - 1;
-      const z = Math.floor(p.posZ);
-      const ok = placeBlockFacing(w, x, y, z, 1);
-      if (ok && p.onGround) p.motionY = 0.42;
-      ui.setStatus(ok ? 'stepped up' : 'place failed (adapter)');
-    },
-
-    craftBench(){
-      // Placeholder: needs your client’s inventory & crafting API.
-      ui.setStatus('crafting requires inventory API mapping');
-      ui.log('To enable crafting, map your inventory API here (openContainer, craft grid, etc.)');
-    }
-  };
-
-  // main tick
-  setInterval(() => {
-    if (!state.active || state.currentIdx >= state.path.length) return;
-    const player = findPlayer();
-    const world = findWorld();
-    if (!player || !world) { state.active=false; return; }
-
-    const node = state.path[state.currentIdx];
-    // If the node is now blocked and breaking/placing is allowed, act:
-    if (!isStandable(world, node.x, node.y, node.z)) {
-      // Try to clear head / feet if allowed
-      if (state.settings.allowBreak) {
-        hitAround(world, node.x, node.y, node.z);
-      } else {
-        // Repath if blocked and we can't break
-        const start = toNode(player.posX, player.posY, player.posZ);
-        const res = aStar(start, state.path[state.path.length-1], world, state.settings);
-        if (res) { state.path = res; state.currentIdx = 0; ui.setStatus('repath'); }
-        return;
-      }
-    }
-
-    const reached = moveTowardsBlock(player, node);
-    if (reached) {
-      state.currentIdx++;
-      if (state.currentIdx >= state.path.length) {
-        state.active = false;
-        ui.setStatus('arrived');
-      }
-    }
-  }, 50);
-
-  /* ---------- helpers ---------- */
-
-  function toNode(px,py,pz){
-    return { x: Math.floor(px), y: Math.floor(py+0.001), z: Math.floor(pz) };
-  }
-
-  function moveTowardsBlock(player, node){
-    // target center
-    const tx = node.x + 0.5, tz = node.z + 0.5;
-    const dx = tx - player.posX;
-    const dz = tz - player.posZ;
-    const dist = Math.hypot(dx,dz);
-    if (dist < 0.35 && Math.abs((node.y) - player.posY) < 1.1) {
-      player.motionX = 0; player.motionZ = 0; return true;
-    }
-    const nx = dx / (dist || 1e-6);
-    const nz = dz / (dist || 1e-6);
-    player.motionX = nx * 0.22;
-    player.motionZ = nz * 0.22;
-
-    // Handle vertical step
-    const dy = node.y - Math.floor(player.posY);
-    if (dy >= 1 && player.onGround) player.motionY = 0.42; // jump up
-
+    // heuristic: if recipe logically known as table-only (like furnace), we already place in 3x3 above.
     return false;
-  }
+  },
 
-  function hitAround(world, x,y,z){
-    // Try clearing head and feet spaces
-    hitBlock(world, x, y, z);
-    hitBlock(world, x, y+1, z);
-  }
+  /* =============== Crafting =============== */
+  async craftGrid(grid, needs3x3){
+    if (needs3x3){
+      const near = await this.findNearbyBlock('crafting_table', 6);
+      if (!near){ FLOG('Need crafting_table nearby. Trying to craft one 2x2 first…'); return false; }
+      await this.pathTo(near);
+      await this.adapter.useBlock(near);
+      await wait(200);
+      return this.adapter.craftWindowGrid(grid, 3);
+    } else {
+      // 2x2 in player inventory crafting
+      await this.adapter.openPlayerCraft();
+      await wait(150);
+      return this.adapter.craftWindowGrid(grid, 2);
+    }
+  },
 
-  function isAir(world, x,y,z){
-    return (getBlockId(world,x,y,z) === 0);
-  }
+  /* =============== Mining / Placing =============== */
+  async mine(blockId, tool, tier, count=1){
+    FLOG(`Mine ${blockId} x${count}`);
+    // locate closest matching block
+    for(let i=0;i<count;i++){
+      const p = await this.findNearbyBlock(blockId, 64);
+      if (!p){ FLOG('Block not found nearby:', blockId); return false; }
+      await this.pathTo(p.adj || {x:p.x,y:p.y,z:p.z});
+      await this.adapter.lookAt(p);
+      const ok = await this.adapter.breakBlock(p);
+      if (!ok){ FLOG('Break failed'); return false; }
+      await wait(80);
+    }
+    return true;
+  },
 
-  function isStandable(world, x,y,z){
-    // feet & head must be air, block below solid
-    const below = getBlockId(world,x,y-1,z);
-    return isAir(world,x,y,z) && isAir(world,x,y+1,z) && (below !== 0);
-  }
+  async place(blockId, pos, face=[0,1,0]){
+    await this.adapter.selectHotbar(blockId);
+    await this.pathTo(pos);
+    await this.adapter.lookAt(pos);
+    return this.adapter.placeBlock(pos, face);
+  },
 
-  /* ---------- A* pathfinding ---------- */
-  function aStar(start, goal, world, settings){
-    const maxNodes = settings.maxNodes || 800;
-    const range = Math.max(8, settings.searchRange || 64);
+  /* =============== Smelting / Hunting (stubs hooked) =============== */
+  async smelt(input, output, count){
+    const furnace = await this.findNearbyBlock('furnace', 8);
+    if (!furnace){ FLOG('No furnace nearby'); return false; }
+    await this.pathTo(furnace);
+    return this.adapter.smelt(furnace, input, 'coal', count);
+  },
 
-    const open = new MinHeap((a,b)=> a.f - b.f);
-    const startKey = key(start);
-    const g = new Map([[startKey, 0]]);
-    const f = new Map([[startKey, heuristic(start, goal)]]);
-    const came = new Map();
-    open.push({ n: start, f: f.get(startKey) });
+  async hunt(mobName, count){
+    // naive: go to nearest entity by name & attack
+    for(let i=0;i<count;i++){
+      const ent = await this.adapter.findNearestMob(mobName, 48);
+      if (!ent){ FLOG('No mob found:', mobName); return false; }
+      await this.pathTo(ent.pos);
+      await this.adapter.attackEntity(ent);
+      await wait(300);
+    }
+    return true;
+  },
 
-    let visited = 0;
+  /* =============== Pathfinding (2.5D A*) =============== */
+  async pathTo(target){
+    const start = await this.adapter.playerPos();
+    const path = this.astar({x:Math.floor(start.x),y:Math.floor(start.y),z:Math.floor(start.z)},
+                            {x:Math.floor(target.x),y:Math.floor(target.y),z:Math.floor(target.z)});
+    if (!path) { FLOG('No path'); return false; }
+    FLOG('Path len:', path.length);
+    for (const wp of path){
+      await this.adapter.moveTo(wp);
+    }
+    return true;
+  },
 
-    while(!open.isEmpty()){
-      if (++visited > maxNodes) break;
-      const cur = open.pop().n;
-      const cKey = key(cur);
-
-      if (cur.x === goal.x && cur.y === goal.y && cur.z === goal.z){
-        return reconstruct(came, cur);
+  neighbors(n){
+    const ret = [];
+    const dirs = [[1,0],[ -1,0 ],[0,1],[0,-1]];
+    for (const [dx,dz] of dirs){
+      const nx = n.x+dx, nz=n.z+dz;
+      // vertical step check
+      let ny = n.y;
+      if (!this.isPassable(nx,ny,nz)) {
+        // try step up
+        if (this.isPassable(nx,ny+1,nz) && (ny+1 - n.y) <= this.settings.stepHeight) ny++;
+        else continue;
       }
+      // fall if air below
+      while (this.isPassable(nx,ny-1,nz) && ny>0) ny--;
+      ret.push({x:nx,y:ny,z:nz});
+    }
+    return ret;
+  },
 
-      for (const nb of neighbors(cur, world, range)){
-        const nKey = key(nb);
-        const tentative = (g.get(cKey) || Infinity) + nb.cost;
-        if (tentative < (g.get(nKey) || Infinity)) {
-          came.set(nKey, cur);
-          g.set(nKey, tentative);
-          const fScore = tentative + heuristic(nb, goal);
-          f.set(nKey, fScore);
-          open.push({ n: nb, f: fScore });
+  isPassable(x,y,z){
+    // player needs 2 blocks of headroom at (x,y) and (x,y+1)
+    const b1 = this.adapter.blockIdAt({x,y,z});
+    const b2 = this.adapter.blockIdAt({x,y:y+1,z});
+    const solid = id => id && id!=='air' && id!=='water' && id!=='tall_grass';
+    return !solid(b1) && !solid(b2);
+  },
+
+  astar(start, goal){
+    const key = p=>`${p.x},${p.y},${p.z}`;
+    const open = new Map(); const openPQ = [];
+    const came = new Map(); const g = new Map();
+    const h = (a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y)+Math.abs(a.z-b.z);
+
+    const push = (n, fscore)=>{
+      open.set(key(n), {n, f:fscore});
+      openPQ.push({k:key(n), f:fscore});
+    };
+    const pop = ()=>{
+      if (!openPQ.length) return null;
+      let idx=0; for(let i=1;i<openPQ.length;i++) if (openPQ[i].f < openPQ[idx].f) idx=i;
+      const it = openPQ.splice(idx,1)[0];
+      const o = open.get(it.k); open.delete(it.k); return o?.n || null;
+    };
+
+    push(start, h(start,goal));
+    g.set(key(start), 0);
+
+    let iter=0;
+    while (open.size){
+      if (++iter > this.settings.maxNodes) break;
+      const current = pop(); if (!current) break;
+      if (key(current) === key(goal)){
+        // reconstruct
+        const path=[current]; let k=key(current);
+        while (came.has(k)){ const prev = came.get(k); path.push(prev); k=key(prev); }
+        path.reverse();
+        return path;
+      }
+      for (const nb of this.neighbors(current)){
+        const tentative = g.get(key(current)) + 1;
+        if (tentative < (g.get(key(nb)) ?? Infinity)){
+          came.set(key(nb), current);
+          g.set(key(nb), tentative);
+          push(nb, tentative + h(nb,goal));
         }
       }
     }
     return null;
-  }
+  },
 
-  function neighbors(n, world, range){
-    // 4-way + vertical steps (up/down 1) + small drop
-    const out = [];
-    const dirs = [
-      [ 1,0],[-1,0],[0, 1],[0,-1]
-    ];
-    for (const [dx,dz] of dirs){
-      // same Y
-      const nx = n.x + dx, ny = n.y, nz = n.z + dz;
-      if (within(n, nx, ny, nz, range) && isStandable(world, nx, ny, nz)) {
-        out.push({ x:nx, y:ny, z:nz, cost: 1 });
-      }
-      // step up
-      const uy = n.y + 1;
-      if (within(n, nx, uy, nz, range) && isStandable(world, nx, uy, nz) && isAir(world, nx, ny, nz)) {
-        out.push({ x:nx, y:uy, z:nz, cost: 1.4 });
-      }
-      // step down (one)
-      const dy = n.y - 1;
-      if (within(n, nx, dy, nz, range) && isStandable(world, nx, dy, nz)) {
-        out.push({ x:nx, y:dy, z:nz, cost: 1.2 });
+  /* =============== Block Search =============== */
+  async findNearbyBlock(blockId, radius=16){
+    const p = await this.adapter.playerPos();
+    const start = {x:Math.floor(p.x), y:Math.floor(p.y), z:Math.floor(p.z)};
+    let best=null, bestD=1e9;
+    for (let y=start.y-4; y<=start.y+4; y++){
+      for (let x=start.x-radius; x<=start.x+radius; x++){
+        for (let z=start.z-radius; z<=start.z+radius; z++){
+          const id = this.adapter.blockIdAt({x,y,z});
+          if (id===blockId){
+            const d = Math.abs(x-start.x)+Math.abs(y-start.y)+Math.abs(z-start.z);
+            if (d<bestD) { bestD=d; best={x,y,z}; }
+          }
+        }
       }
     }
-    return out;
-  }
-
-  function within(a, x,y,z, r){
-    return Math.abs(x - a.x) <= r && Math.abs(y - a.y) <= 8 && Math.abs(z - a.z) <= r;
-  }
-
-  function heuristic(a,b){
-    // Manhattan with vertical bias
-    return Math.abs(a.x-b.x) + Math.abs(a.z-b.z) + 1.5*Math.abs(a.y-b.y);
-  }
-
-  function key(n){ return `${n.x},${n.y},${n.z}`; }
-
-  function reconstruct(came, cur){
-    const path = [cur];
-    while (came.has(key(cur))) {
-      cur = came.get(key(cur));
-      path.unshift(cur);
+    if (!best) return null;
+    // find adjacent standable
+    for (const [dx,dy,dz] of FACE_DIRS){
+      const adj = {x:best.x+dx, y:best.y+dy, z:best.z+dz};
+      if (this.isPassable(adj.x,adj.y,adj.z)) return Object.assign(best,{adj});
     }
-    return path;
-  }
+    return best;
+  },
 
-  /* ---------- tiny binary heap ---------- */
-  function MinHeap(comp){
-    this.a = []; this.comp = comp;
-  }
-  MinHeap.prototype.size = function(){ return this.a.length; };
-  MinHeap.prototype.isEmpty = function(){ return this.a.length === 0; };
-  MinHeap.prototype.push = function(x){
-    const a=this.a, c=this.comp; a.push(x);
-    let i=a.length-1; while(i>0){
-      const p=(i-1)>>1; if(c(a[i],a[p])>=0) break; [a[i],a[p]]=[a[p],a[i]]; i=p;
-    }
-  };
-  MinHeap.prototype.pop = function(){
-    const a=this.a, c=this.comp; if(a.length===0) return null;
-    const top=a[0], last=a.pop(); if(a.length){ a[0]=last; let i=0;
-      for(;;){
-        const l=i*2+1, r=l+1; let s=i;
-        if(l<a.length && c(a[l],a[s])<0) s=l;
-        if(r<a.length && c(a[r],a[s])<0) s=r;
-        if(s===i) break; [a[i],a[s]]=[a[s],a[i]]; i=s;
+  /* =============== Build Canvas (simple pixel -> block) =============== */
+  build:{
+    palette:[],
+    current:'stone',
+    initPalette(list){
+      this.palette = list;
+      const pal = document.getElementById('palette');
+      pal.innerHTML = '';
+      list.forEach(b=>{
+        const btn = document.createElement('button');
+        btn.textContent = b; btn.onclick = ()=>{ F1shPr0.build.current=b; };
+        pal.appendChild(btn);
+      });
+    },
+    newCanvas(){
+      const c = document.getElementById('buildCanvas');
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#000'; ctx.fillRect(0,0,c.width,c.height);
+      c.onmousedown = e=>{
+        const r = c.getBoundingClientRect();
+        const x = Math.floor((e.clientX-r.left)/8)*8;
+        const y = Math.floor((e.clientY-r.top)/8)*8;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(x,y,8,8);
+        ctx.fillStyle = '#0f0';
+        ctx.fillText(F1shPr0.build.current, x+1,y+7);
+      };
+    },
+    async run(){
+      FLOG('Build runner (demo): place a small 3x3 torch grid');
+      const p = await F1shPr0.adapter.playerPos();
+      for (let dx=-1; dx<=1; dx++){
+        for (let dz=-1; dz<=1; dz++){
+          await F1shPr0.place('torch',{x:Math.floor(p.x)+dx, y:Math.floor(p.y), z:Math.floor(p.z)+dz}, [0,1,0]);
+          await wait(120);
+        }
       }
+      FLOG('Build done.');
     }
-    return top;
-  };
+  },
 
-  return api;
-}
+  /* =============== Eagler Adapter (auto detect) =============== */
+  detectAdapter(){
+    if (EAGLER_MODE==='sim') return Adapters.sim();
+    try{
+      // Heuristic probes (works on most Eaglercraft 1.8.8 builds)
+      const g = window;
+      const mc = g.minecraft || g.Minecraft || g.client || g.theMinecraft || null;
+      const player = g.thePlayer || mc?.thePlayer || g.player || null;
+      const world = g.theWorld || mc?.theWorld || g.world || null;
+      if (mc && player && world) return Adapters.eagler(mc, world, player);
+      if (EAGLER_MODE==='force') return Adapters.eagler(mc||{}, world||{}, player||{});
+    }catch(e){}
+    return Adapters.sim();
+  }
+};
+
+/* ======================= Adapters ======================= */
+const Adapters = {
+  /* ---------- Simulation adapter (safe fallback) ---------- */
+  sim(){
+    FLOG('Adapter: simulation');
+    const store = { pos:{x:0,y:64,z:0}, yaw:0, pitch:0 };
+    return {
+      kind:'sim',
+      async playerPos(){ return {...store.pos}; },
+      blockIdAt(p){ return 'air'; },
+      async moveTo(p){ FLOG(`(sim) move -> ${p.x},${p.y},${p.z}`); await wait(25); },
+      async lookAt(p){ FLOG(`(sim) look at ${p.x},${p.y},${p.z}`); },
+      async breakBlock(p){ FLOG(`(sim) break ${p.x},${p.y},${p.z}`); await wait(50); return true; },
+      async placeBlock(p, face){ FLOG(`(sim) place at ${p.x},${p.y},${p.z}`); return true; },
+      async selectHotbar(item){ FLOG(`(sim) select ${item}`); },
+      async openPlayerCraft(){ FLOG('(sim) open 2x2 craft'); return true; },
+      async craftWindowGrid(grid, size){ FLOG(`(sim) craft ${size}x size with grid`, grid); await wait(50); return true; },
+      async useBlock(p){ FLOG('(sim) use block', p); },
+      async smelt(furnace, input, fuel, count){ FLOG(`(sim) smelt ${input} -> (count:${count})`); return true; },
+      async findNearestMob(name, r){ FLOG(`(sim) find mob ${name}`); return {name, pos:{x:2,y:64,z:2}}; },
+      async attackEntity(ent){ FLOG('(sim) attack', ent.name); return true; },
+    };
+  },
+
+  /* ---------- Eaglercraft 1.8.8 adapter ---------- */
+  eagler(mc, world, player){
+    FLOG('Adapter: Eaglercraft detected');
+    // These will vary between builds; we keep calls conservative and guarded.
+    const safe = (fn, ret=false)=>{ try{ return fn(); }catch(e){ return ret; } };
+
+    return {
+      kind:'eagler',
+      async playerPos(){
+        return { x:player.posX, y:player.posY, z:player.posZ };
+      },
+      blockIdAt(p){
+        const blk = safe(()=>world.getBlockState(new mc.BlockPos(p.x,p.y,p.z)).getBlock(), null);
+        const id = blk ? mc.Block.blockRegistry.getNameForObject(blk).toString() : 'air';
+        // normalize some names to our items.json ids
+        return id.replace('minecraft:','').replace('log2','oak_log'); // naive normalization
+      },
+      async moveTo(wp){
+        // very simple steering: face target, walk forward; stop when close
+        const pos = await this.playerPos();
+        const dx = wp.x + 0.5 - pos.x, dz = wp.z + 0.5 - pos.z;
+        const yaw = Math.atan2(-dx, dz) * 180/Math.PI;
+        player.rotationYaw = yaw;
+        player.moveForward = 1.0;
+        let t=0;
+        while (Math.hypot(wp.x+0.5 - player.posX, wp.z+0.5 - player.posZ) > 0.35 && t<600){
+          await wait(16); t++;
+        }
+        player.moveForward = 0.0;
+      },
+      async lookAt(p){
+        const pos = await this.playerPos();
+        const dx = p.x + 0.5 - pos.x, dy = p.y + 0.5 - pos.y, dz = p.z + 0.5 - pos.z;
+        const yaw = Math.atan2(-dx, dz) * 180/Math.PI;
+        const pitch = -Math.atan2(dy, Math.hypot(dx,dz)) * 180/Math.PI;
+        player.rotationYaw = yaw; player.rotationPitch = pitch;
+        await wait(20);
+      },
+      async breakBlock(p){
+        // Raycast + start/stop dig packets
+        const bp = new mc.BlockPos(p.x,p.y,p.z);
+        const face = mc.EnumFacing.UP;
+        player.swingItem();
+        playerController.onPlayerDamageBlock(bp, face);
+        const start = Date.now();
+        while (this.blockIdAt(p) !== 'air' && (Date.now()-start) < F1shPr0.settings.breakTimeout){
+          player.swingItem();
+          playerController.onPlayerDamageBlock(bp, face);
+          await wait(80);
+        }
+        return this.blockIdAt(p) === 'air';
+      },
+      async placeBlock(p, faceArr){
+        const bp = new mc.BlockPos(p.x,p.y,p.z);
+        const face = mc.EnumFacing.UP;
+        playerController.processRightClickBlock(player, world, bp, face, player.getLookVec(), mc.EnumHand.MAIN_HAND);
+        await wait(60);
+        return true;
+      },
+      async selectHotbar(itemId){
+        // naive: scan hotbar for any stack whose id contains itemId
+        const inv = player.inventory;
+        for (let i=0;i<9;i++){
+          const s = inv.mainInventory[i];
+          if (!s) continue;
+          const id = mc.Item.itemRegistry.getNameForObject(s.getItem()).toString().replace('minecraft:','');
+          if (id.includes(itemId)){ inv.currentItem = i; break; }
+        }
+        await wait(10);
+      },
+      async openPlayerCraft(){
+        // just opens inventory; 2x2 craft is in player inventory window
+        player.openContainer.onContainerOpened(player);
+        await wait(80);
+        return true;
+      },
+      async craftWindowGrid(grid, size){
+        // Translate grid positions into slot indices.
+        // Player 2x2 craft slots (vanilla): 1,2,5,6 (varies by build). We'll probe by type names.
+        // Crafting Table 3x3 slots (vanilla): 1..9. We try to locate by container type.
+        const ci = player.openContainer;
+        const slots = ci.inventorySlots; // List<Slot>
+        const isTable = slots.length >= 46; // crafting table container usually bigger than player inv
+        // Map grid -> input slots:
+        let mapSlots = [];
+        if (size===2 && !isTable){
+          // heuristic for 2x2: find first 4 non-player slots that precede result
+          // result slot likely at index 0; inputs at 1..4
+          mapSlots = [1,2,3,4];
+        } else {
+          // 3x3: assume 1..9 inputs
+          mapSlots = [1,2,3,4,5,6,7,8,9];
+        }
+        // Clear inputs
+        for (const si of mapSlots) await this.shiftClickOut(slots[si]);
+        // Put items per grid
+        const flat = [];
+        for (let r=0;r<3;r++) for(let c=0;c<3;c++) flat.push(grid[r]?.[c]||null);
+        for (let i=0;i<mapSlots.length;i++){
+          const want = flat[i];
+          if (!want) continue;
+          await this.placeFromInv(mapSlots[i], want, 1);
+        }
+        // shift-click result (slot 0)
+        await this.takeResult(slots[0]);
+        return true;
+      },
+      async shiftClickOut(slot){ /* optional: cleanup */ },
+      async placeFromInv(targetSlot, itemId, qty){
+        // Find item in player inventory; click to move to targetSlot the amount
+        // This is highly build-specific; fallback to controller.click
+        // For many Eagler builds:
+        playerController.windowClick(player.openContainer.windowId, targetSlot, 0, 0, player);
+        await wait(30);
+      },
+      async takeResult(resultSlot){
+        // Click result to craft once
+        playerController.windowClick(player.openContainer.windowId, 0, 0, 0, player);
+        await wait(40);
+      },
+      async useBlock(pos){
+        const bp = new mc.BlockPos(pos.x,pos.y,pos.z);
+        playerController.processRightClickBlock(player, world, bp, mc.EnumFacing.UP, player.getLookVec(), mc.EnumHand.MAIN_HAND);
+      },
+      async smelt(furnacePos, input, fuel, count){
+        // Open furnace GUI and place items (simplified – many builds differ)
+        await this.useBlock(furnacePos);
+        await wait(120);
+        // TODO: slot indices 0=input,1=fuel,2=out in most builds:
+        return true;
+      },
+      async findNearestMob(name, radius){
+        // scan loaded entity list
+        let best=null, bestD=1e9;
+        const me = await this.playerPos();
+        for (const e of world.loadedEntityList){
+          if (!e || !e.getName) continue;
+          if (e.getName().toLowerCase().includes(name.toLowerCase())){
+            const d = Math.abs(e.posX-me.x)+Math.abs(e.posY-me.y)+Math.abs(e.posZ-me.z);
+            if (d<bestD) { best=e; bestD=d; }
+          }
+        }
+        return best ? {name:best.getName(), pos:{x:best.posX,y:best.posY,z:best.posZ}, raw:best} : null;
+      },
+      async attackEntity(ent){
+        playerController.attackEntity(player, ent.raw);
+        player.swingItem();
+        await wait(120);
+        return true;
+      }
+    };
+  }
+};
+
+/* ================ expose commands ================ */
+F1shPr0.cmdGoto = function(){
+  const x = +document.getElementById('gotoX').value;
+  const y = +document.getElementById('gotoY').value;
+  const z = +document.getElementById('gotoZ').value;
+  this.enqueue({type:'goto', pos:{x,y,z}});
+  this.runTasks();
+};
+F1shPr0.cmdTrack = async function(){
+  const name = document.getElementById('trackName').value;
+  const ent = await this.adapter.findNearestMob(name, 64);
+  if (!ent){ FLOG('No player/mob found'); return; }
+  this.enqueue({type:'goto', pos:ent.pos});
+  this.runTasks();
+};
+
+/* init */
+window.onload = ()=>F1shPr0.init();
