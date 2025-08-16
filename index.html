@@ -1,117 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>F1shPr0 Client — Eaglercraft 1.8.8</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./f1shpr0.css" />
+  <title>F1shPr0 Bot Client</title>
   <style>
-    html,body { margin:0; padding:0; background:#0b0f12; }
-    #game-frame { position:fixed; inset:0; width:100vw; height:100vh; border:0; }
-    #f1-open { position:fixed; top:10px; right:10px; z-index:99999; }
+    body { margin:0; font-family: monospace; }
+    #f1shpr0Menu {
+      display: none;
+      position: absolute;
+      top: 50px;
+      left: 50px;
+      width: 400px;
+      background: rgba(0,0,0,0.85);
+      color: #00ff99;
+      padding: 20px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+    button {
+      margin: 5px;
+      padding: 6px 10px;
+      background: #111;
+      color: #0f0;
+      border: 1px solid #0f0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    input {
+      background: #000;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 4px;
+      width: 200px;
+    }
   </style>
 </head>
 <body>
-  <!-- Your original client -->
-  <iframe id="game-frame" src="Release 1.8.8.html"></iframe>
+  <div id="f1shpr0Menu">
+    <h2>F1shPr0 Client</h2>
+    <button onclick="F1shPr0.showGet()">Get Item</button>
+    <button onclick="F1shPr0.gotoPrompt()">Goto</button>
+    <button onclick="F1shPr0.trackPrompt()">Track Player</button>
+    <button onclick="F1shPr0.buildPrompt()">Build</button>
 
-  <!-- Quick-open button -->
-  <button id="f1-open" class="f1-btn">🐟 Bot</button>
-
-  <!-- Bot UI -->
-  <div id="f1-ui" class="f1-panel" style="display:none">
-    <div class="f1-header">
-      <span>F1shPr0 — Fishtone</span>
-      <button id="f1-close" class="f1-close">×</button>
-    </div>
-
-    <div class="f1-tabs">
-      <button class="active" data-tab="goto">Goto</button>
-      <button data-tab="track">Track</button>
-      <button data-tab="build">Build</button>
-      <button data-tab="get">Get</button>
-      <button data-tab="settings">Settings</button>
-      <button data-tab="debug">Debug</button>
-    </div>
-
-    <!-- GOTO -->
-    <div id="f1-tab-goto" class="f1-tab active">
-      <div class="f1-row">
-        <label>X</label><input id="goto-x" type="number" step="1" />
-        <label>Y</label><input id="goto-y" type="number" step="1" />
-        <label>Z</label><input id="goto-z" type="number" step="1" />
-        <button id="goto-btn" class="f1-btn">Go</button>
-        <button id="goto-look" class="f1-btn">Use Look Block</button>
-        <button id="stop-btn" class="f1-btn f1-danger">Stop</button>
-      </div>
-      <div class="f1-row"><span id="f1-status">idle</span></div>
-    </div>
-
-    <!-- TRACK -->
-    <div id="f1-tab-track" class="f1-tab">
-      <div class="f1-row">
-        <label>Player</label><input id="track-name" placeholder="Exact name" />
-        <button id="track-btn" class="f1-btn">Track</button>
-      </div>
-    </div>
-
-    <!-- BUILD -->
-    <div id="f1-tab-build" class="f1-tab">
-      <div class="f1-row">
-        <label>Origin X</label><input id="build-x" type="number" />
-        <label>Y</label><input id="build-y" type="number" />
-        <label>Z</label><input id="build-z" type="number" />
-      </div>
-      <div class="f1-row">
-        <label>Pixel Size</label>
-        <select id="pixel-size">
-          <option value="1">1 (1 block)</option>
-          <option value="2">2 (4 blocks)</option>
-          <option value="4">4 (16 blocks)</option>
-          <option value="8">8 (64 blocks)</option>
-        </select>
-        <label>Block</label>
-        <select id="block-picker"></select>
-        <button id="clear-canvas" class="f1-btn">Clear</button>
-      </div>
-      <canvas id="build-canvas" width="256" height="256"></canvas>
-      <div class="f1-row">
-        <button id="build-plan-btn" class="f1-btn">Plan & Build</button>
-      </div>
-    </div>
-
-    <!-- GET -->
-    <div id="f1-tab-get" class="f1-tab">
-      <div class="f1-row">
-        <input id="get-input" placeholder="Type item (e.g. iron_pickaxe, torch, crafting_table)" />
-        <button id="get-btn" class="f1-btn">Get</button>
-      </div>
-      <div id="get-suggest" class="f1-suggest"></div>
-      <pre id="get-plan" class="f1-log"></pre>
-    </div>
-
-    <!-- SETTINGS -->
-    <div id="f1-tab-settings" class="f1-tab">
-      <div class="f1-row">
-        <label><input id="set-allow-break" type="checkbox" /> Allow Breaking</label>
-        <label><input id="set-allow-place" type="checkbox" /> Allow Placing</label>
-        <label>Search Range</label><input id="set-range" type="number" value="64" />
-        <label>Max Nodes</label><input id="set-nodes" type="number" value="1200" />
-      </div>
-    </div>
-
-    <!-- DEBUG -->
-    <div id="f1-tab-debug" class="f1-tab">
-      <pre id="f1-log" class="f1-log"></pre>
-    </div>
+    <div id="menuContent"></div>
   </div>
 
-  <script src="./f1shpr0.js"></script>
-  <script>
-    // Open/close panel (button)
-    const panel = document.getElementById('f1-ui');
-    document.getElementById('f1-open').onclick = () => panel.style.display = 'block';
-    document.getElementById('f1-close').onclick = () => panel.style.display = 'none';
-  </script>
+  <script src="f1shpr0.js"></script>
 </body>
 </html>
